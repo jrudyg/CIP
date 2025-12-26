@@ -403,6 +403,38 @@ def render_original_pane(finding: Dict):
         st.info("No original clause text available")
 
 
+def format_redline_html(text: str) -> str:
+    """Convert redline delimiters to styled HTML.
+
+    - ~~text~~ becomes strikethrough (red, deleted)
+    - `text` becomes highlighted (green, added)
+    """
+    # Escape HTML entities first
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    # Convert ~~strikethrough~~ to red deletion styling
+    text = re.sub(
+        r'~~(.+?)~~',
+        r'<span style="text-decoration: line-through; color: #ff6b6b; background-color: rgba(239,68,68,0.1); padding: 1px 3px;"></span>',
+        text,
+        flags=re.DOTALL
+    )
+
+    # Convert `backticks` to green addition styling
+    text = re.sub(
+        r'`(.+?)`',
+        r'<span style="background-color: #2d5a3d; color: #90EE90; padding: 2px 4px; border-radius: 3px;"></span>',
+        text,
+        flags=re.DOTALL
+    )
+
+    # Convert newlines to <br> for HTML display
+    text = text.replace("\n", "<br>")
+
+
+    return text
+
+
 def render_revision_pane(finding: Dict):
     """Render right column with formatted redline_suggestion."""
     redline = finding.get("redline_suggestion", "")
@@ -419,17 +451,25 @@ def render_revision_pane(finding: Dict):
 
     st.markdown(label)
     if display_text:
-        # Show with redline formatting explanation
-        st.text_area(
-            "Revision",
-            value=display_text,
-            height=200,
-            disabled=True,
-            key="rdl_revision_text",
-            label_visibility="collapsed"
-        )
-        if "~~" in display_text or "`" in display_text:
-            st.caption("Format: ~~strikethrough~~ = delete, `backticks` = add")
+        # Render styled HTML with proper formatting
+        styled_html = format_redline_html(display_text)
+        html_container = f"""
+        <div style="
+            background-color: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 12px;
+            min-height: 180px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #E2E8F0;
+        ">{styled_html}</div>
+        """
+        st.markdown(html_container, unsafe_allow_html=True)
+        st.caption("Legend: strikethrough = delete | highlighted = add")
     else:
         st.info("No revision suggestion available")
 
