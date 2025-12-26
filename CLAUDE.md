@@ -111,3 +111,30 @@ Claude Code cannot see browser output. For UI changes:
 | Reports DB | `C:\Users\jrudy\CIP\data\reports.db` |
 | Uploads | `C:\Users\jrudy\CIP\data/uploads/` |
 | Logs | `C:\Users\jrudy\CIP\logs/` |
+
+---
+## Git Workflow (MANDATORY)
+
+Remote: https://github.com/jrudyg/CIP.git
+
+### After ANY file changes:
+1. Stage: `git add .`
+2. Commit: `git commit -m "[descriptive message]"`
+3. Push: Automatic via post-commit hook
+
+### Commit triggers:
+- After each completed fix
+- Before ending session
+- Before/after major changes
+
+### If push fails:
+1. Check remote: `git remote -v`
+2. Manual push: `git push origin <branch>`
+3. If auth error: Report to user
+
+### Commands:
+- Status: `git status`
+- History: `git log --oneline -10`
+- Restore file: `git checkout [hash] -- path/to/file`
+- Sync check: `git log origin/main --oneline -3`
+- Current branch: `git branch --show-current`
