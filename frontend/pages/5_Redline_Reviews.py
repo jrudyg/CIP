@@ -1,0 +1,750 @@
+"""
+CIP Redline Reviews Page v1.0
+Side-by-side clause review workflow for QA/QC of AI-suggested contract revisions.
+"""
+
+import streamlit as st
+import requests
+import json
+import re
+from datetime import datetime
+from typing import Dict, List, Optional
+
+from components.page_wrapper import init_page, page_header, content_container
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+API_BASE = "http://localhost:5000/api"
+
+SEVERITY_CONFIG = {
+    "dealbreaker": {"icon": "🔴", "color": "#EF4444", "bg": "rgba(239,68,68,0.15)", "label": "DEALBREAKER"},
+    "critical": {"icon": "🟠", "color": "#F97316", "bg": "rgba(249,115,22,0.15)", "label": "CRITICAL"},
+    "important": {"icon": "🟡", "color": "#EAB308", "bg": "rgba(234,179,8,0.15)", "label": "IMPORTANT"},
+    "standard": {"icon": "🟢", "color": "#22C55E", "bg": "rgba(34,197,94,0.15)", "label": "STANDARD"},
+}
+
+COLORS = {
+    "header_bg": "rgba(30, 41, 59, 0.6)",
+    "pane_bg": "rgba(30, 41, 59, 0.4)",
+    "border": "rgba(255, 255, 255, 0.1)",
+    "deletion": "#EF4444",
+    "deletion_bg": "rgba(239, 68, 68, 0.1)",
+    "addition": "#22C55E",
+    "addition_bg": "rgba(34, 197, 94, 0.15)",
+    "accent": "#A78BFA",
+    "text_primary": "#E2E8F0",
+    "text_secondary": "#94A3B8",
+}
+
+# ============================================================================
+# SESSION STATE
+# ============================================================================
+
+def init_redline_state():
+    """Initialize session state with defaults."""
+    defaults = {
+        "rdl_contract_id": None,
+        "rdl_contract_title": "",
+        "rdl_findings": [],
+        "rdl_current_index": 0,
+        "rdl_decisions": {},
+        "rdl_show_modify_modal": False,
+        "rdl_loading": False,
+        "rdl_error": None,
+        "rdl_source": None,
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+
+# ============================================================================
+# API FUNCTIONS
+# ============================================================================
+
+def api_get_contracts() -> List[Dict]:
+    """GET /api/contracts - return list of contracts."""
+    try:
+        response = requests.get(f"{API_BASE}/contracts", timeout=10)
+        if response.status_code != 200:
+            return []
+        data = response.json()
+        contracts = data if isinstance(data, list) else data.get("contracts", data.get("data", []))
+        return [c for c in contracts if c and isinstance(c, dict)]
+    except Exception:
+        return []
+
+
+def api_run_analysis(contract_id: int) -> Dict:
+    """POST /api/analyze - run fresh analysis."""
+    try:
+        response = requests.post(
+            f"{API_BASE}/analyze",
+            json={"contract_id": contract_id},
+            timeout=120
+        )
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def api_save_redline(contract_id: int, decisions: list, risk_before: str) -> Dict:
+    """Save redline decisions to database."""
+    try:
+        response = requests.post(
+            f"{API_BASE}/redline/save",
+            json={
+                'contract_id': contract_id,
+                'decisions': decisions,
+                'overall_risk_before': risk_before
+            },
+            timeout=30
+        )
+        return response.json()
+    except Exception as e:
+        return {'error': str(e)}
+
+
+# ============================================================================
+# DATA LOADING FUNCTIONS
+# ============================================================================
+
+def flatten_findings(analysis: Dict) -> List[Dict]:
+    """Flatten analysis response into list of findings with severity."""
+    findings = []
+    severity_map = {
+        "dealbreakers": "dealbreaker",
+        "critical_items": "critical",
+        "important_items": "important",
+        "standard_items": "standard"
+    }
+    for group_key, severity in severity_map.items():
+        for item in analysis.get(group_key, []):
+            item["severity"] = severity
+            findings.append(item)
+    return findings
+
+
+def load_findings_from_risk_analysis() -> List[Dict]:
+    """Load from st.session_state['risk_findings'] if available."""
+    risk_findings = st.session_state.get("risk_findings", [])
+    if not risk_findings:
+        return []
+    # Ensure severity is set
+    for f in risk_findings:
+        if "severity" not in f:
+            risk_level = f.get("risk_level", "STANDARD").upper()
+            severity_map = {
+                "DEALBREAKER": "dealbreaker",
+                "CRITICAL": "critical",
+                "IMPORTANT": "important",
+                "STANDARD": "standard"
+            }
+            f["severity"] = severity_map.get(risk_level, "standard")
+    return risk_findings
+
+
+def load_findings_fresh(contract_id: int) -> List[Dict]:
+    """Run fresh analysis and extract findings."""
+    result = api_run_analysis(contract_id)
+    if "error" in result:
+        st.session_state["rdl_error"] = result.get("error", "Analysis failed")
+        return []
+    analysis = result.get("analysis", result)
+    return flatten_findings(analysis)
+
+
+# ============================================================================
+# STATE MANAGEMENT FUNCTIONS
+# ============================================================================
+
+def get_current_finding() -> Optional[Dict]:
+    """Return finding at current index."""
+    findings = st.session_state.get("rdl_findings", [])
+    index = st.session_state.get("rdl_current_index", 0)
+    if findings and 0 <= index < len(findings):
+        return findings[index]
+    return None
+
+
+def get_decision(index: int) -> Dict:
+    """Return decision dict for index, or empty defaults."""
+    decisions = st.session_state.get("rdl_decisions", {})
+    return decisions.get(index, {"decision": None, "modified_text": "", "note": ""})
+
+
+def set_decision(index: int, decision: str, modified_text: str = "", note: str = ""):
+    """Save decision to session state."""
+    if "rdl_decisions" not in st.session_state:
+        st.session_state["rdl_decisions"] = {}
+    st.session_state["rdl_decisions"][index] = {
+        "decision": decision,
+        "modified_text": modified_text,
+        "note": note
+    }
+
+
+def get_progress_stats() -> Dict:
+    """Return {total, accepted, rejected, modified, pending}."""
+    findings = st.session_state.get("rdl_findings", [])
+    decisions = st.session_state.get("rdl_decisions", {})
+    total = len(findings)
+    accepted = sum(1 for d in decisions.values() if d.get("decision") == "accepted")
+    rejected = sum(1 for d in decisions.values() if d.get("decision") == "rejected")
+    modified = sum(1 for d in decisions.values() if d.get("decision") == "modified")
+    pending = total - accepted - rejected - modified
+    return {
+        "total": total,
+        "accepted": accepted,
+        "rejected": rejected,
+        "modified": modified,
+        "pending": pending
+    }
+
+
+def go_next():
+    """Increment index (stop at end)."""
+    findings = st.session_state.get("rdl_findings", [])
+    index = st.session_state.get("rdl_current_index", 0)
+    if index < len(findings) - 1:
+        st.session_state["rdl_current_index"] = index + 1
+
+
+def go_previous():
+    """Decrement index (stop at 0)."""
+    index = st.session_state.get("rdl_current_index", 0)
+    if index > 0:
+        st.session_state["rdl_current_index"] = index - 1
+
+
+def go_to_index(index: int):
+    """Jump to specific index."""
+    findings = st.session_state.get("rdl_findings", [])
+    if 0 <= index < len(findings):
+        st.session_state["rdl_current_index"] = index
+
+
+# ============================================================================
+# FORMATTING FUNCTIONS
+# ============================================================================
+
+def format_redline(text: str) -> str:
+    """Convert ~~del~~ to red strikethrough, `add` to green bold."""
+    if not text:
+        return ""
+    # Handle deletions: ~~deleted text~~
+    text = re.sub(
+        r'~~(.+?)~~',
+        r'<span style="color:#EF4444;text-decoration:line-through;background:rgba(239,68,68,0.1);padding:0 2px;">\1</span>',
+        text
+    )
+    # Handle additions: `added text`
+    text = re.sub(
+        r'`([^`]+)`',
+        r'<span style="color:#22C55E;font-weight:600;background:rgba(34,197,94,0.15);padding:0 4px;border-radius:2px;">\1</span>',
+        text
+    )
+    return text
+
+
+def clean_redline_for_edit(text: str) -> str:
+    """Remove redline markers for editing, keeping the suggested changes."""
+    if not text:
+        return ""
+    # Remove deletion markers and their content (keep only additions)
+    text = re.sub(r'~~.+?~~\s*', '', text)
+    # Remove backticks but keep the content
+    text = re.sub(r'`([^`]+)`', r'\1', text)
+    return text.strip()
+
+
+# ============================================================================
+# RENDER FUNCTIONS
+# ============================================================================
+
+def render_contract_selector():
+    """Render dropdown + load buttons."""
+    contracts = api_get_contracts()
+
+    col1, col2, col3 = st.columns([2, 1, 1])
+
+    with col1:
+        options = ["Select a contract..."] + [
+            f"{c.get('id', 0)}: {(c.get('title') or 'Untitled')[:50]}"
+            for c in contracts
+        ]
+        selected = st.selectbox(
+            "Contract",
+            options,
+            key="rdl_contract_select",
+            label_visibility="collapsed"
+        )
+        if selected != "Select a contract...":
+            contract_id = int(selected.split(":")[0])
+            st.session_state["rdl_contract_id"] = contract_id
+            st.session_state["rdl_contract_title"] = selected.split(": ", 1)[1] if ": " in selected else ""
+
+    with col2:
+        risk_findings_available = bool(st.session_state.get("risk_findings", []))
+        if st.button(
+            "Load from Analysis",
+            key="rdl_load_analysis",
+            disabled=not risk_findings_available,
+            use_container_width=True
+        ):
+            findings = load_findings_from_risk_analysis()
+            if findings:
+                st.session_state["rdl_findings"] = findings
+                st.session_state["rdl_current_index"] = 0
+                st.session_state["rdl_decisions"] = {}
+                st.session_state["rdl_source"] = "analysis"
+                st.session_state["rdl_error"] = None
+                st.rerun()
+
+    with col3:
+        contract_selected = st.session_state.get("rdl_contract_id") is not None
+        if st.button(
+            "Run Fresh Scan",
+            key="rdl_fresh_scan",
+            disabled=not contract_selected,
+            type="primary",
+            use_container_width=True
+        ):
+            st.session_state["rdl_loading"] = True
+            contract_id = st.session_state.get("rdl_contract_id")
+            with st.spinner("Running analysis..."):
+                findings = load_findings_fresh(contract_id)
+            st.session_state["rdl_loading"] = False
+            if findings:
+                st.session_state["rdl_findings"] = findings
+                st.session_state["rdl_current_index"] = 0
+                st.session_state["rdl_decisions"] = {}
+                st.session_state["rdl_source"] = "fresh"
+                st.session_state["rdl_error"] = None
+            st.rerun()
+
+    # Show error if any
+    if st.session_state.get("rdl_error"):
+        st.error(st.session_state["rdl_error"])
+
+
+def render_finding_header(finding: Dict, index: int, total: int):
+    """Render: Finding X of Y | section | severity badge | category | issue"""
+    severity = finding.get("severity", "standard").lower()
+    cfg = SEVERITY_CONFIG.get(severity, SEVERITY_CONFIG["standard"])
+
+    section_num = finding.get("section_number", "")
+    section_title = finding.get("section_title", finding.get("clause_title", ""))
+    category = finding.get("category", "").title()
+    issue = finding.get("finding", finding.get("issue", ""))[:100]
+
+    # Current decision indicator
+    decision = get_decision(index)
+    decision_text = ""
+    if decision["decision"] == "accepted":
+        decision_text = " - Accepted"
+    elif decision["decision"] == "rejected":
+        decision_text = " - Rejected"
+    elif decision["decision"] == "modified":
+        decision_text = " - Modified"
+
+    # Header row with title and severity
+    col_title, col_badge = st.columns([4, 1])
+    with col_title:
+        title_parts = [f"**Finding {index + 1} of {total}**"]
+        if section_num:
+            title_parts.append(f"Section {section_num}")
+        if section_title:
+            title_parts.append(section_title)
+        if decision_text:
+            title_parts.append(decision_text)
+        st.markdown(" | ".join(title_parts))
+
+    with col_badge:
+        if severity == "dealbreaker":
+            st.error(f"{cfg['icon']} {cfg['label']}")
+        elif severity == "critical":
+            st.warning(f"{cfg['icon']} {cfg['label']}")
+        elif severity == "important":
+            st.info(f"{cfg['icon']} {cfg['label']}")
+        else:
+            st.success(f"{cfg['icon']} {cfg['label']}")
+
+    # Category and issue
+    details = []
+    if category:
+        details.append(f"**Category:** {category}")
+    details.append(f"**Issue:** {issue}{'...' if len(finding.get('finding', '')) > 100 else ''}")
+    st.caption(" | ".join(details))
+
+
+def render_original_pane(finding: Dict):
+    """Render left column with section # and original clause text."""
+    clause_text = finding.get("clause_text", "")
+    section = finding.get("clause_reference", "") or finding.get("section", "") or ""
+
+    if section:
+        st.markdown(f"**{section}**")
+    else:
+        st.markdown("**ORIGINAL**")
+
+    if clause_text:
+        st.text_area(
+            "Original",
+            value=clause_text,
+            height=300,
+            disabled=True,
+            key="rdl_original_text",
+            label_visibility="collapsed"
+        )
+    else:
+        st.info("No original clause text available")
+
+
+def render_revision_pane(finding: Dict):
+    """Render right column with formatted redline_suggestion."""
+    redline = finding.get("redline_suggestion", "")
+
+    # Check if there's a modified version
+    index = st.session_state.get("rdl_current_index", 0)
+    decision = get_decision(index)
+    if decision["decision"] == "modified" and decision.get("modified_text"):
+        display_text = decision["modified_text"]
+        label = "**MODIFIED REVISION**"
+    else:
+        display_text = redline
+        label = "**SUGGESTED REDLINE**"
+
+    st.markdown(label)
+    if display_text:
+        # Show with redline formatting explanation
+        st.text_area(
+            "Revision",
+            value=display_text,
+            height=200,
+            disabled=True,
+            key="rdl_revision_text",
+            label_visibility="collapsed"
+        )
+        if "~~" in display_text or "`" in display_text:
+            st.caption("Format: ~~strikethrough~~ = delete, `backticks` = add")
+    else:
+        st.info("No revision suggestion available")
+
+
+def render_footer(finding: Dict):
+    """Render business impact, cascade_impacts, confidence."""
+    issue = finding.get("finding", finding.get("issue", ""))
+    recommendation = finding.get("recommendation", "")
+    cascades = finding.get("cascade_impacts", [])
+    confidence = finding.get("confidence", 0)
+    confidence_pct = int(confidence * 100) if isinstance(confidence, float) and confidence <= 1 else int(confidence)
+
+    st.divider()
+
+    col_info, col_conf = st.columns([4, 1])
+
+    with col_info:
+        st.markdown(f"**Business Impact:** {issue}")
+        if recommendation:
+            st.markdown(f"**Recommendation:** {recommendation}")
+        if cascades:
+            cascade_items = ", ".join(cascades[:3])
+            if len(cascades) > 3:
+                cascade_items += f" (+{len(cascades) - 3} more)"
+            st.caption(f"Cascade Impacts: {cascade_items}")
+
+    with col_conf:
+        st.metric("Confidence", f"{confidence_pct}%")
+
+
+def render_actions(index: int):
+    """Render Reject/Modify/Accept buttons. Update decisions on click."""
+    decision = get_decision(index)
+    current = decision.get("decision")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        btn_type = "primary" if current == "rejected" else "secondary"
+        if st.button("Reject", key=f"rdl_reject_{index}", use_container_width=True, type=btn_type):
+            set_decision(index, "rejected")
+            go_next()
+            st.rerun()
+
+    with col2:
+        btn_type = "primary" if current == "modified" else "secondary"
+        if st.button("Modify", key=f"rdl_modify_{index}", use_container_width=True, type=btn_type):
+            st.session_state["rdl_show_modify_modal"] = True
+            st.rerun()
+
+    with col3:
+        btn_type = "primary" if current == "accepted" else "secondary"
+        if st.button("Accept", key=f"rdl_accept_{index}", use_container_width=True, type=btn_type):
+            set_decision(index, "accepted")
+            go_next()
+            st.rerun()
+
+
+def render_navigation(index: int, total: int):
+    """Render Prev/Next buttons, dot indicators, Jump dropdown."""
+    st.divider()
+
+    col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
+
+    with col1:
+        if st.button("Prev", key="rdl_prev", disabled=(index == 0), use_container_width=True):
+            go_previous()
+            st.rerun()
+
+    with col2:
+        # Text-based progress indicator
+        indicators = []
+        for i in range(total):
+            decision = get_decision(i)
+            if decision.get("decision") == "accepted":
+                mark = "A"
+            elif decision.get("decision") == "rejected":
+                mark = "X"
+            elif decision.get("decision") == "modified":
+                mark = "M"
+            else:
+                mark = "o"
+
+            if i == index:
+                indicators.append(f"[{mark}]")
+            else:
+                indicators.append(mark)
+
+        st.markdown(f"**Progress:** {' '.join(indicators)}")
+        st.caption("A=Accepted, X=Rejected, M=Modified, o=Pending, []=Current")
+
+    with col3:
+        if st.button("Next", key="rdl_next", disabled=(index >= total - 1), use_container_width=True):
+            go_next()
+            st.rerun()
+
+    with col4:
+        jump_options = [f"#{i+1}" for i in range(total)]
+        selected_jump = st.selectbox(
+            "Jump",
+            jump_options,
+            index=index,
+            key="rdl_jump",
+            label_visibility="collapsed"
+        )
+        new_index = int(selected_jump.replace("#", "")) - 1
+        if new_index != index:
+            go_to_index(new_index)
+            st.rerun()
+
+
+def render_progress_bar():
+    """Render stats + Export button."""
+    stats = get_progress_stats()
+
+    st.divider()
+
+    col_a, col_r, col_m, col_p, col_export = st.columns([1, 1, 1, 1, 1])
+
+    with col_a:
+        st.metric("Accepted", stats['accepted'])
+    with col_r:
+        st.metric("Rejected", stats['rejected'])
+    with col_m:
+        st.metric("Modified", stats['modified'])
+    with col_p:
+        st.metric("Pending", stats['pending'])
+    with col_export:
+        export_data = export_decisions()
+        st.download_button(
+            label="Export JSON",
+            data=export_data,
+            file_name=f"redline_decisions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            mime="application/json",
+            key="rdl_download",
+            use_container_width=True
+        )
+
+    # Check if review is complete
+    pending_count = stats.get("pending", 0)
+    total_count = stats.get("total", 0)
+
+    if total_count > 0 and pending_count == 0:
+        st.success("**Review Complete!** All findings have been reviewed.")
+        st.markdown("**Next Steps:**")
+        st.markdown("1. **Save & Complete** - Persist decisions to database")
+        st.markdown("2. **Export JSON** - Download decisions for documentation")
+
+        col_save, col_back, col_spacer = st.columns([1, 1, 2])
+        with col_save:
+            if st.button("Save & Complete", key="rdl_save_complete", type="primary"):
+                # Collect decisions
+                decisions = st.session_state.get("rdl_decisions", {})
+                findings = st.session_state.get("rdl_findings", [])
+                contract_id = st.session_state.get("rdl_contract_id")
+                risk_before = st.session_state.get("rdl_overall_risk", "")
+                
+                # Format decisions for API
+                decision_list = []
+                for idx, dec in decisions.items():
+                    finding = findings[idx] if idx < len(findings) else {}
+                    decision_list.append({
+                        'clause_index': idx,
+                        'decision': dec.get('decision'),
+                        'modified_text': dec.get('modified_text', ''),
+                        'note': dec.get('note', ''),
+                        'section': finding.get('section_number', ''),
+                        'category': finding.get('category', '')
+                    })
+                
+                result = api_save_redline(contract_id, decision_list, risk_before)
+                if 'error' in result:
+                    st.error(f"Save failed: {result['error']}")
+                else:
+                    st.success(f"Saved! Redline ID: {result.get('redline_id')}")
+                    st.session_state["rdl_saved"] = True
+                    st.rerun()
+        
+        with col_back:
+            if st.button("Back to Portfolio", key="rdl_back_portfolio"):
+                st.switch_page("pages/2_Contracts_Portfolio.py")
+
+
+def render_modify_editor(finding: Dict, index: int):
+    """Render text_area with clean version of redline, note field, Save/Cancel."""
+    st.markdown("---")
+    st.markdown("### Modify Revision")
+
+    redline = finding.get("redline_suggestion", "")
+    clean_text = clean_redline_for_edit(redline)
+
+    decision = get_decision(index)
+    initial_text = decision.get("modified_text") or clean_text
+    initial_note = decision.get("note", "")
+
+    modified_text = st.text_area(
+        "Edit the suggested revision:",
+        value=initial_text,
+        height=150,
+        key=f"rdl_modify_text_{index}"
+    )
+
+    note = st.text_input(
+        "Note (optional):",
+        value=initial_note,
+        key=f"rdl_modify_note_{index}",
+        placeholder="Reason for modification..."
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("Save", key=f"rdl_save_modify_{index}", type="primary", use_container_width=True):
+            set_decision(index, "modified", modified_text, note)
+            st.session_state["rdl_show_modify_modal"] = False
+            go_next()
+            st.rerun()
+
+    with col2:
+        if st.button("Cancel", key=f"rdl_cancel_modify_{index}", use_container_width=True):
+            st.session_state["rdl_show_modify_modal"] = False
+            st.rerun()
+
+
+def export_decisions() -> str:
+    """Generate JSON export of all decisions."""
+    findings = st.session_state.get("rdl_findings", [])
+    decisions = st.session_state.get("rdl_decisions", {})
+
+    export_data = {
+        "contract_id": st.session_state.get("rdl_contract_id"),
+        "contract_title": st.session_state.get("rdl_contract_title"),
+        "source": st.session_state.get("rdl_source"),
+        "exported_at": datetime.now().isoformat(),
+        "summary": get_progress_stats(),
+        "items": []
+    }
+
+    for i, finding in enumerate(findings):
+        decision = decisions.get(i, {"decision": None, "modified_text": "", "note": ""})
+        export_data["items"].append({
+            "index": i,
+            "section_number": finding.get("section_number", ""),
+            "section_title": finding.get("section_title", ""),
+            "severity": finding.get("severity", ""),
+            "category": finding.get("category", ""),
+            "finding": finding.get("finding", ""),
+            "original_clause": finding.get("clause_text", ""),
+            "suggested_revision": finding.get("redline_suggestion", ""),
+            "decision": decision.get("decision"),
+            "modified_text": decision.get("modified_text", ""),
+            "note": decision.get("note", "")
+        })
+
+    return json.dumps(export_data, indent=2)
+
+
+def render_empty_state():
+    """Render empty state when no findings loaded."""
+    st.info("No findings loaded. Select a contract and load findings to begin review.")
+
+
+# ============================================================================
+# MAIN PAGE
+# ============================================================================
+
+init_page("Redline Reviews", "📝", max_width=1400)
+
+page_header(
+    "Redline Reviews",
+    subtitle="Review and approve AI-suggested contract revisions",
+    show_status=True,
+    show_version=True
+)
+
+init_redline_state()
+
+with content_container():
+    # Contract selector row
+    render_contract_selector()
+
+    findings = st.session_state.get("rdl_findings", [])
+
+    if not findings:
+        render_empty_state()
+    else:
+        index = st.session_state.get("rdl_current_index", 0)
+        total = len(findings)
+
+        # Clamp index to valid range
+        if index >= total:
+            index = total - 1
+            st.session_state["rdl_current_index"] = index
+
+        finding = findings[index] if index < total else None
+
+        if finding:
+            # Navigation at top for context
+            render_navigation(index, total)
+
+            st.markdown("---")
+
+            # Two columns only: Original | Revision
+            col_left, col_right = st.columns(2)
+            with col_left:
+                render_original_pane(finding)
+            with col_right:
+                render_revision_pane(finding)
+
+            # Actions below panes
+            render_actions(index)
+
+            # Modification editor (if in modify mode)
+            if st.session_state.get("rdl_modify_mode"):
+                render_modify_editor(finding, index)
+
+            # Progress bar with Save button
+            render_progress_bar()

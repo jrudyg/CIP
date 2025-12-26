@@ -1,0 +1,131 @@
+CHANNEL PARTNER AGREEMENT
+
+This Channel Partner Agreement ("Agreement") is entered into as of March 15, 2025 (the "Effective Date") by and between:
+
+GLOBALSALES CORPORATION, a Delaware corporation ("Vendor")
+
+and
+
+REGIONAL SOLUTIONS INC., a Texas corporation ("Partner")
+
+RECITALS
+
+WHEREAS, Vendor develops and sells enterprise software solutions; and
+
+WHEREAS, Partner desires to market and resell Vendor's products in the designated territory;
+
+NOW, THEREFORE, the parties agree as follows:
+
+1. APPOINTMENT AND TERRITORY
+
+1.1 Appointment. Vendor hereby appoints Partner as a non-exclusive channel partner to market, promote, and resell the Products listed in Exhibit A within the Territory defined in Exhibit B.
+
+1.2 Territory. Partner's territory shall be limited to the states of Texas, Oklahoma, Arkansas, and Louisiana ("Territory").
+
+1.3 Non-Exclusive. This appointment is non-exclusive. Vendor reserves the right to appoint other partners in the Territory and to sell directly within the Territory.
+
+2. PARTNER OBLIGATIONS
+
+2.1 Sales Targets. Partner shall use commercially reasonable efforts to achieve the quarterly sales targets set forth in Exhibit C.
+
+2.2 Marketing. Partner shall actively market the Products and maintain a trained sales team capable of demonstrating and supporting the Products.
+
+2.3 Reporting. Partner shall provide monthly sales reports and pipeline forecasts by the 5th business day of each month.
+
+2.4 Compliance. Partner shall comply with Vendor's Partner Program Guidelines and all applicable laws.
+
+3. PRICING AND COMMISSIONS
+
+3.1 Partner Discount. Partner shall receive the standard partner discount of 25% off list price for all Product sales.
+
+3.2 Commission Structure. Partner shall earn commissions as follows:
+    (a) New Customer Sales: 20% of net license revenue
+    (b) Existing Customer Expansion: 15% of net license revenue
+    (c) Renewals: 10% of net renewal revenue
+
+3.3 COMMISSION ON DIRECT SALES. Partner shall NOT receive any commission, fee, or compensation of any kind for sales made directly by Vendor to customers within Partner's Territory. Vendor may sell directly to any customer at any time without notice to Partner, and Partner hereby waives any claim to commission on direct sales regardless of Partner's prior engagement with such customer. Even if Partner has invested significant time, resources, or effort in cultivating a customer relationship, Vendor may close the deal directly and Partner shall have no compensation rights whatsoever.
+
+3.4 Commission Clawback. If a customer cancels or receives a refund within 12 months of purchase, Partner's commission shall be clawed back in full.
+
+3.5 Commission Payment. Commissions are payable quarterly, 60 days after quarter end, only for fully collected revenue.
+
+4. INTELLECTUAL PROPERTY
+
+4.1 Ownership. Vendor retains all rights, title, and interest in the Products, including all intellectual property rights.
+
+4.2 License Grant. Vendor grants Partner a limited, non-exclusive, non-transferable license to use Vendor's trademarks solely for marketing the Products.
+
+4.3 Restrictions. Partner shall not modify, reverse engineer, or create derivative works of the Products.
+
+5. TERM AND TERMINATION
+
+5.1 Initial Term. This Agreement shall commence on the Effective Date and continue for one (1) year.
+
+5.2 Renewal. This Agreement shall automatically renew for successive one-year terms unless either party provides written notice of non-renewal at least 60 days prior to expiration.
+
+5.3 Termination for Convenience. Vendor may terminate this Agreement at any time upon 30 days written notice. Partner may terminate upon 90 days written notice.
+
+5.4 Termination for Cause. Either party may terminate immediately upon written notice if the other party materially breaches this Agreement and fails to cure within 30 days.
+
+5.5 Effect of Termination. Upon termination:
+    (a) Partner shall immediately cease all marketing and sales activities;
+    (b) Partner shall return all Vendor materials and confidential information;
+    (c) Vendor shall pay commissions earned through termination date;
+    (d) Partner shall lose access to partner portal and support systems.
+
+6. REPRESENTATIONS AND WARRANTIES
+
+6.1 Mutual Representations. Each party represents that it has full authority to enter into this Agreement.
+
+6.2 Partner Representations. Partner represents that it has the capability and resources to effectively market the Products.
+
+6.3 DISCLAIMER. EXCEPT AS EXPRESSLY SET FORTH HEREIN, VENDOR MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+7. LIMITATION OF LIABILITY
+
+7.1 Cap. NEITHER PARTY'S LIABILITY SHALL EXCEED THE TOTAL COMMISSIONS PAID TO PARTNER IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+
+7.2 Exclusions. IN NO EVENT SHALL EITHER PARTY BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES.
+
+8. CONFIDENTIALITY
+
+8.1 Definition. "Confidential Information" means any non-public information disclosed by either party.
+
+8.2 Obligations. Each party shall protect the other's Confidential Information using reasonable care and shall not disclose it to third parties.
+
+8.3 Exceptions. Information is not confidential if it is publicly available, independently developed, or rightfully received from a third party.
+
+9. GENERAL PROVISIONS
+
+9.1 Entire Agreement. This Agreement constitutes the entire agreement between the parties.
+
+9.2 Amendments. This Agreement may only be amended in writing signed by both parties.
+
+9.3 Governing Law. This Agreement shall be governed by the laws of Delaware.
+
+9.4 Dispute Resolution. Disputes shall be resolved by binding arbitration in Wilmington, Delaware.
+
+9.5 Assignment. Neither party may assign this Agreement without prior written consent.
+
+9.6 Notices. All notices shall be in writing and delivered to the addresses below.
+
+EXHIBITS
+
+Exhibit A: Product List
+Exhibit B: Territory Definition
+Exhibit C: Sales Targets
+Exhibit D: Partner Program Guidelines
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+GLOBALSALES CORPORATION                  REGIONAL SOLUTIONS INC.
+
+By: _________________________            By: _________________________
+Name: Patricia Thompson                  Name: James Rodriguez
+Title: VP of Channel Sales               Title: President
+Date: March 15, 2025                     Date: March 15, 2025
+
+Address for Notices:                     Address for Notices:
+200 Commerce Street                      4500 Preston Road
+Suite 1000                               Suite 300
+Wilmington, DE 19801                     Dallas, TX 75240

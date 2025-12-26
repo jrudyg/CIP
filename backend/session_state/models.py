@@ -1,396 +1,228 @@
 """
-Session State Models for P7 Streaming Backend.
+Session State Models — P7.S2
+SSE connection tracking for session management.
 
 Phase: P7.S2
-Author: CC1 (Backend Mechanic)
-Directive: S2.T1_SESSION_STATE_MODELS
+Task: S2.T1
+Author: CAI (Backend Architect)
 
-Defines:
-- SessionStatus enum for lifecycle states
-- SessionMetadata for connection metadata
-- SessionConfig for session configuration
-- SessionState as the primary state container
-
-CIP Protocol: This module is part of the P7 SSE backend.
-Frozen surfaces (TRUST, GEM, Z7, API shapes) are NOT modified.
+Provides:
+- SSEConnectionStatus enum
+- SSEConnectionInfo dataclass
+- SessionSSEState with max 5 connections enforcement
 """
 
-import logging
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-# Diagnostic logging hook
-logger = logging.getLogger("session_state.models")
 
-
-class SessionStatus(Enum):
-    """
-    Session lifecycle status.
-
-    Maps to P7ConnectionState from the shared contract for FE/BE alignment.
-    """
-
-    PENDING = "pending"
-    """Session created but not yet connected."""
-
+class SSEConnectionStatus(str, Enum):
+    """SSE connection status for session tracking."""
+    INACTIVE = "inactive"
+    CONNECTING = "connecting"
     ACTIVE = "active"
-    """Session is connected and streaming events."""
-
-    STALE = "stale"
-    """Session has not received keepalive within threshold."""
-
     RECONNECTING = "reconnecting"
-    """Client is attempting to reconnect."""
-
-    PAUSED = "paused"
-    """Session is temporarily paused (backpressure)."""
-
-    CLOSED = "closed"
-    """Session has been gracefully closed."""
-
     TERMINATED = "terminated"
-    """Session was forcefully terminated."""
-
-    ERROR = "error"
-    """Session is in error state."""
 
 
 @dataclass
-class SessionConfig:
+class SSEConnectionInfo:
     """
-    Configuration for a session.
-
-    Defines operational parameters for the session lifecycle.
+    SSE connection metadata for a session.
+    Tracks connection state, timing, and metrics.
     """
-
-    keepalive_interval_ms: int = 30000
-    """Keepalive interval in milliseconds (default: 30s)."""
-
-    stale_threshold_ms: int = 45000
-    """Stale detection threshold in milliseconds (default: 45s)."""
-
-    max_replay_events: int = 1000
-    """Maximum events to buffer for replay."""
-
-    max_reconnect_attempts: int = 5
-    """Maximum reconnection attempts before termination."""
-
-    backpressure_threshold: int = 100
-    """Queue size threshold for backpressure."""
-
-    client_version: Optional[str] = None
-    """Client version for compatibility checking."""
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary representation."""
-        return {
-            "keepalive_interval_ms": self.keepalive_interval_ms,
-            "stale_threshold_ms": self.stale_threshold_ms,
-            "max_replay_events": self.max_replay_events,
-            "max_reconnect_attempts": self.max_reconnect_attempts,
-            "backpressure_threshold": self.backpressure_threshold,
-            "client_version": self.client_version,
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SessionConfig":
-        """Create from dictionary representation."""
-        return cls(
-            keepalive_interval_ms=data.get("keepalive_interval_ms", 30000),
-            stale_threshold_ms=data.get("stale_threshold_ms", 45000),
-            max_replay_events=data.get("max_replay_events", 1000),
-            max_reconnect_attempts=data.get("max_reconnect_attempts", 5),
-            backpressure_threshold=data.get("backpressure_threshold", 100),
-            client_version=data.get("client_version"),
-        )
-
-
-@dataclass
-class SessionMetadata:
-    """
-    Metadata for a session.
-
-    Contains diagnostic and tracking information.
-    """
-
-    client_ip: Optional[str] = None
-    """Client IP address."""
-
-    user_agent: Optional[str] = None
-    """Client user agent string."""
-
-    user_id: Optional[str] = None
-    """Authenticated user identifier."""
-
-    contract_id: Optional[str] = None
-    """Associated contract identifier (CIP context)."""
-
-    workspace_id: Optional[str] = None
-    """Associated workspace identifier."""
-
-    tags: Dict[str, str] = field(default_factory=dict)
-    """Custom tags for categorization."""
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary representation."""
-        return {
-            "client_ip": self.client_ip,
-            "user_agent": self.user_agent,
-            "user_id": self.user_id,
-            "contract_id": self.contract_id,
-            "workspace_id": self.workspace_id,
-            "tags": self.tags,
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SessionMetadata":
-        """Create from dictionary representation."""
-        return cls(
-            client_ip=data.get("client_ip"),
-            user_agent=data.get("user_agent"),
-            user_id=data.get("user_id"),
-            contract_id=data.get("contract_id"),
-            workspace_id=data.get("workspace_id"),
-            tags=data.get("tags", {}),
-        )
-
-
-@dataclass
-class SessionState:
-    """
-    Primary session state container.
-
-    Represents the complete state of an SSE session, including:
-    - Identity and lifecycle status
-    - Sequence tracking for replay
-    - Connection metrics
-    - Configuration and metadata
-    """
-
-    session_id: str
-    """Unique session identifier."""
-
-    status: SessionStatus = SessionStatus.PENDING
-    """Current session status."""
-
-    # Timestamps
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    """Session creation timestamp (ISO 8601)."""
-
-    connected_at: Optional[str] = None
-    """Connection establishment timestamp."""
-
-    last_event_at: Optional[str] = None
-    """Last event timestamp."""
-
-    last_keepalive_at: Optional[str] = None
-    """Last keepalive timestamp."""
-
-    closed_at: Optional[str] = None
-    """Session closure timestamp."""
-
-    # Sequence tracking
+    connection_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    status: SSEConnectionStatus = SSEConnectionStatus.INACTIVE
+    connected_at: Optional[datetime] = None
+    last_event_at: Optional[datetime] = None
+    last_keepalive_at: Optional[datetime] = None
     last_sequence: int = 0
-    """Last sequence number sent."""
-
-    last_acked_sequence: int = 0
-    """Last sequence acknowledged by client."""
-
-    replay_from_sequence: Optional[int] = None
-    """Sequence to replay from on reconnection."""
-
-    # Metrics
     events_sent: int = 0
-    """Total events sent."""
-
-    events_dropped: int = 0
-    """Events dropped due to backpressure."""
-
-    bytes_sent: int = 0
-    """Total bytes sent."""
-
-    keepalives_sent: int = 0
-    """Keepalive events sent."""
-
-    replays_performed: int = 0
-    """Number of replay operations."""
-
     reconnect_count: int = 0
-    """Number of reconnections."""
-
-    # State transitions
-    state_history: List[str] = field(default_factory=list)
-    """History of state transitions."""
-
-    # Configuration and metadata
-    config: SessionConfig = field(default_factory=SessionConfig)
-    """Session configuration."""
-
-    metadata: SessionMetadata = field(default_factory=SessionMetadata)
-    """Session metadata."""
-
-    # Error tracking
-    last_error: Optional[str] = None
-    """Last error message."""
-
-    error_count: int = 0
-    """Total error count."""
-
-    def transition_to(self, new_status: SessionStatus) -> None:
-        """
-        Transition to a new status.
-
-        Args:
-            new_status: Target status
-        """
-        old_status = self.status
-        self.status = new_status
-
-        transition = f"{old_status.value}->{new_status.value}@{datetime.now().isoformat()}"
-        self.state_history.append(transition)
-
-        logger.debug(f"Session {self.session_id}: {transition}")
-
-        # Update timestamps based on status
-        if new_status == SessionStatus.ACTIVE:
-            self.connected_at = datetime.now().isoformat()
-        elif new_status in {SessionStatus.CLOSED, SessionStatus.TERMINATED}:
-            self.closed_at = datetime.now().isoformat()
-
-    def record_event(self, sequence: int, bytes_size: int = 0) -> None:
-        """
-        Record an event being sent.
-
-        Args:
-            sequence: Event sequence number
-            bytes_size: Size of event in bytes
-        """
-        self.last_sequence = sequence
-        self.last_event_at = datetime.now().isoformat()
-        self.events_sent += 1
-        self.bytes_sent += bytes_size
-
-    def record_keepalive(self) -> None:
-        """Record a keepalive event."""
-        self.last_keepalive_at = datetime.now().isoformat()
-        self.keepalives_sent += 1
-
-    def record_replay(self) -> None:
-        """Record a replay operation."""
-        self.replays_performed += 1
-
-    def record_reconnect(self, from_sequence: int) -> None:
-        """
-        Record a reconnection.
-
-        Args:
-            from_sequence: Sequence to replay from
-        """
-        self.reconnect_count += 1
-        self.replay_from_sequence = from_sequence
-        self.transition_to(SessionStatus.RECONNECTING)
-
-    def record_error(self, error_message: str) -> None:
-        """
-        Record an error.
-
-        Args:
-            error_message: Error description
-        """
-        self.last_error = error_message
-        self.error_count += 1
-        logger.warning(f"Session {self.session_id} error: {error_message}")
-
-    def is_active(self) -> bool:
-        """Check if session is in an active state."""
-        return self.status in {
-            SessionStatus.ACTIVE,
-            SessionStatus.RECONNECTING,
-            SessionStatus.PAUSED,
-        }
-
-    def is_terminal(self) -> bool:
-        """Check if session is in a terminal state."""
-        return self.status in {
-            SessionStatus.CLOSED,
-            SessionStatus.TERMINATED,
-            SessionStatus.ERROR,
-        }
+    client_version: Optional[str] = None
+    client_ip: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary representation."""
+        """Convert to dictionary for serialization."""
+        return {
+            "connection_id": self.connection_id,
+            "status": self.status.value,
+            "connected_at": self.connected_at.isoformat() if self.connected_at else None,
+            "last_event_at": self.last_event_at.isoformat() if self.last_event_at else None,
+            "last_keepalive_at": self.last_keepalive_at.isoformat() if self.last_keepalive_at else None,
+            "last_sequence": self.last_sequence,
+            "events_sent": self.events_sent,
+            "reconnect_count": self.reconnect_count,
+            "client_version": self.client_version,
+            "client_ip": self.client_ip,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SSEConnectionInfo":
+        """Create from dictionary."""
+        return cls(
+            connection_id=data.get("connection_id", str(uuid.uuid4())),
+            status=SSEConnectionStatus(data.get("status", "inactive")),
+            connected_at=datetime.fromisoformat(data["connected_at"]) if data.get("connected_at") else None,
+            last_event_at=datetime.fromisoformat(data["last_event_at"]) if data.get("last_event_at") else None,
+            last_keepalive_at=datetime.fromisoformat(data["last_keepalive_at"]) if data.get("last_keepalive_at") else None,
+            last_sequence=data.get("last_sequence", 0),
+            events_sent=data.get("events_sent", 0),
+            reconnect_count=data.get("reconnect_count", 0),
+            client_version=data.get("client_version"),
+            client_ip=data.get("client_ip"),
+        )
+
+    def mark_connected(self) -> None:
+        """Mark connection as active."""
+        self.status = SSEConnectionStatus.ACTIVE
+        self.connected_at = datetime.now()
+        self.last_keepalive_at = datetime.now()
+
+    def mark_event_sent(self, sequence: int) -> None:
+        """Record event sent."""
+        self.last_event_at = datetime.now()
+        self.last_sequence = sequence
+        self.events_sent += 1
+
+    def mark_keepalive(self) -> None:
+        """Record keepalive sent."""
+        self.last_keepalive_at = datetime.now()
+
+    def mark_reconnecting(self) -> None:
+        """Mark connection as reconnecting."""
+        self.status = SSEConnectionStatus.RECONNECTING
+        self.reconnect_count += 1
+
+    def mark_terminated(self) -> None:
+        """Mark connection as terminated."""
+        self.status = SSEConnectionStatus.TERMINATED
+
+
+@dataclass
+class SessionSSEState:
+    """
+    Extended session state with SSE tracking.
+    Supports multiple concurrent connections per session (multi-tab).
+    Enforces max 5 connections per session.
+    """
+    session_id: str
+    user_id: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+
+    # SSE connection tracking (max 5 per session)
+    sse_connections: List[SSEConnectionInfo] = field(default_factory=list)
+    max_connections: int = 5
+
+    # Session-level SSE state
+    total_events_sent: int = 0
+    total_reconnects: int = 0
+
+    def add_connection(self, connection: SSEConnectionInfo) -> bool:
+        """
+        Add SSE connection to session.
+        
+        Args:
+            connection: Connection info to add
+            
+        Returns:
+            True if added, False if max connections exceeded
+        """
+        # Remove terminated connections first
+        self._cleanup_terminated()
+
+        if len(self.sse_connections) >= self.max_connections:
+            return False
+
+        self.sse_connections.append(connection)
+        self.updated_at = datetime.now()
+        return True
+
+    def remove_connection(self, connection_id: str) -> bool:
+        """
+        Remove SSE connection by ID.
+        
+        Args:
+            connection_id: ID of connection to remove
+            
+        Returns:
+            True if removed, False if not found
+        """
+        initial_count = len(self.sse_connections)
+        self.sse_connections = [
+            c for c in self.sse_connections
+            if c.connection_id != connection_id
+        ]
+        self.updated_at = datetime.now()
+        return len(self.sse_connections) < initial_count
+
+    def get_connection(self, connection_id: str) -> Optional[SSEConnectionInfo]:
+        """Get connection by ID."""
+        for conn in self.sse_connections:
+            if conn.connection_id == connection_id:
+                return conn
+        return None
+
+    def get_active_connections(self) -> List[SSEConnectionInfo]:
+        """Get all active connections."""
+        return [
+            c for c in self.sse_connections
+            if c.status == SSEConnectionStatus.ACTIVE
+        ]
+
+    def get_active_count(self) -> int:
+        """Get count of active connections."""
+        return len(self.get_active_connections())
+
+    def _cleanup_terminated(self) -> None:
+        """Remove terminated connections."""
+        self.sse_connections = [
+            c for c in self.sse_connections
+            if c.status != SSEConnectionStatus.TERMINATED
+        ]
+
+    def record_event_sent(self) -> None:
+        """Record event sent at session level."""
+        self.total_events_sent += 1
+        self.updated_at = datetime.now()
+
+    def record_reconnect(self) -> None:
+        """Record reconnection at session level."""
+        self.total_reconnects += 1
+        self.updated_at = datetime.now()
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for serialization."""
         return {
             "session_id": self.session_id,
-            "status": self.status.value,
-            "created_at": self.created_at,
-            "connected_at": self.connected_at,
-            "last_event_at": self.last_event_at,
-            "last_keepalive_at": self.last_keepalive_at,
-            "closed_at": self.closed_at,
-            "last_sequence": self.last_sequence,
-            "last_acked_sequence": self.last_acked_sequence,
-            "replay_from_sequence": self.replay_from_sequence,
-            "events_sent": self.events_sent,
-            "events_dropped": self.events_dropped,
-            "bytes_sent": self.bytes_sent,
-            "keepalives_sent": self.keepalives_sent,
-            "replays_performed": self.replays_performed,
-            "reconnect_count": self.reconnect_count,
-            "state_history": self.state_history,
-            "config": self.config.to_dict(),
-            "metadata": self.metadata.to_dict(),
-            "last_error": self.last_error,
-            "error_count": self.error_count,
+            "user_id": self.user_id,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "sse_connections": [c.to_dict() for c in self.sse_connections],
+            "max_connections": self.max_connections,
+            "total_events_sent": self.total_events_sent,
+            "total_reconnects": self.total_reconnects,
+            "active_connection_count": self.get_active_count(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SessionState":
-        """Create from dictionary representation."""
-        state = cls(
+    def from_dict(cls, data: Dict[str, Any]) -> "SessionSSEState":
+        """Create from dictionary."""
+        connections = [
+            SSEConnectionInfo.from_dict(c)
+            for c in data.get("sse_connections", [])
+        ]
+        return cls(
             session_id=data["session_id"],
-            status=SessionStatus(data.get("status", "pending")),
-            created_at=data.get("created_at", datetime.now().isoformat()),
-            connected_at=data.get("connected_at"),
-            last_event_at=data.get("last_event_at"),
-            last_keepalive_at=data.get("last_keepalive_at"),
-            closed_at=data.get("closed_at"),
-            last_sequence=data.get("last_sequence", 0),
-            last_acked_sequence=data.get("last_acked_sequence", 0),
-            replay_from_sequence=data.get("replay_from_sequence"),
-            events_sent=data.get("events_sent", 0),
-            events_dropped=data.get("events_dropped", 0),
-            bytes_sent=data.get("bytes_sent", 0),
-            keepalives_sent=data.get("keepalives_sent", 0),
-            replays_performed=data.get("replays_performed", 0),
-            reconnect_count=data.get("reconnect_count", 0),
-            state_history=data.get("state_history", []),
-            last_error=data.get("last_error"),
-            error_count=data.get("error_count", 0),
+            user_id=data.get("user_id"),
+            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else datetime.now(),
+            updated_at=datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else datetime.now(),
+            sse_connections=connections,
+            max_connections=data.get("max_connections", 5),
+            total_events_sent=data.get("total_events_sent", 0),
+            total_reconnects=data.get("total_reconnects", 0),
         )
-
-        if "config" in data:
-            state.config = SessionConfig.from_dict(data["config"])
-        if "metadata" in data:
-            state.metadata = SessionMetadata.from_dict(data["metadata"])
-
-        return state
-
-    def get_observability_metrics(self) -> Dict[str, Any]:
-        """
-        Get metrics for P7 observability hooks.
-
-        Returns metrics required by P7ObservabilityHooks.REQUIRED_METRICS.
-        """
-        return {
-            "last_sequence_id": self.last_sequence,
-            "buffer_size": 0,  # Populated by handler
-            "gap_count": 0,  # Populated by validator
-            "events_processed": self.events_sent,
-            "events_dropped": self.events_dropped,
-            "replay_count": self.replays_performed,
-            "keepalive_delta_ms": 0,  # Calculated by client
-            "connection_state": self.status.value,
-            "last_event_timestamp": self.last_event_at,
-        }

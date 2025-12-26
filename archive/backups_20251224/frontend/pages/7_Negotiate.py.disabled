@@ -1,0 +1,372 @@
+"""
+CIP - Plan Your Response Page
+Strategic negotiation and response planning
+v1.5: Zone layout retrofit (STAB Phase 3 wrapper refactor)
+"""
+
+import streamlit as st
+import requests
+import sys
+
+sys.path.append('C:\\Users\\jrudy\\CIP\\frontend')
+
+from ui_components import (
+    page_header,
+    section_header,
+    metric_card,
+    risk_badge,
+    status_badge,
+    toast_success,
+    toast_warning,
+    toast_error,
+    toast_info,
+    apply_spacing,
+)
+from components.contract_context import (
+    get_active_contract,
+    get_active_contract_data,
+    render_active_contract_header,
+    render_recent_contracts_widget,
+    set_active_contract,
+)
+from cip_components import action_bar
+from page_wrapper import render_page
+from config.api import API_BASE_URL, API_TIMEOUT_DEFAULT
+
+
+# Fetch contracts from API
+@st.cache_data(ttl=60)
+def get_contracts():
+    try:
+        resp = requests.get(f"{API_BASE_URL}/contracts", timeout=5)
+        if resp.ok:
+            data = resp.json()
+            return data.get("contracts", [])
+    except Exception:
+        pass
+    return []
+
+
+contracts = get_contracts()
+
+# Auto-load active contract from context
+active_id = get_active_contract()
+active_data = get_active_contract_data()
+
+# Session state
+if "selected_risk_idx" not in st.session_state:
+    st.session_state["selected_risk_idx"] = 0
+if "response_status" not in st.session_state:
+    st.session_state["response_status"] = {}  # {risk_id: 'drafted'|'reviewed'|'sent'}
+if "response_notes" not in st.session_state:
+    st.session_state["response_notes"] = {}  # {risk_id: [notes]}
+if "risk_category_filter" not in st.session_state:
+    st.session_state["risk_category_filter"] = "All"
+if "risk_type_filter" not in st.session_state:
+    st.session_state["risk_type_filter"] = "All"
+
+# Page header
+page_header(
+    "🤝 Plan Your Response",
+    "Strategic response planning and talking points",
+)
+render_active_contract_header()
+
+# Sample risks for demo (would come from analysis)
+sample_risks = [
+    {"id": 1, "category": "Liability", "type": "Indemnification", "severity": "CRITICAL", "section": "4.2", "clause": "Vendor shall indemnify Customer for all claims arising from Vendor's negligence or willful misconduct."},
+    {"id": 2, "category": "Payment", "type": "Late Fees", "severity": "IMPORTANT", "section": "3.5", "clause": "Late payments shall accrue interest at 18% per annum."},
+    {"id": 3, "category": "Termination", "type": "For Convenience", "severity": "CRITICAL", "section": "5.1", "clause": "Customer may terminate this Agreement at any time with 30 days written notice."},
+    {"id": 4, "category": "IP Rights", "type": "Work Product", "severity": "DEALBREAKER", "section": "6.3", "clause": "All work product created by Vendor shall be owned exclusively by Customer."},
+    {"id": 5, "category": "Confidentiality", "type": "Duration", "severity": "STANDARD", "section": "7.2", "clause": "Confidentiality obligations shall survive for 5 years after termination."},
+]
+
+
+def filter_risks():
+    cat = st.session_state["risk_category_filter"]
+    typ = st.session_state["risk_type_filter"]
+
+    filtered = sample_risks
+    if cat != "All":
+        filtered = [r for r in filtered if r["category"] == cat]
+    if typ != "All":
+        filtered = [r for r in filtered if r["type"] == typ]
+    return filtered
+
+
+def z1_contract_and_filters():
+    """Z1: Contract selector, risk category filter, risk type filter"""
+    section_header("Select Contract & Filter", "📄")
+
+    if active_id:
+        st.info(f"📋 Active: #{active_id} - {active_data.get('title', 'Unknown')[:25]}")
+
+    if contracts is not None and len(contracts) > 0:
+        contracts_safe = [
+            c for c in (contracts or [])
+            if isinstance(c, dict) and 'id' in c
+        ]
+
+        contract_options = {
+            c['id']: f"#{c['id']} - "
+            f"{(c.get('title') or c.get('filename') or 'Unknown')[:20]}"
+            for c in contracts_safe
+        }
+        default_idx = 0
+        if active_id and active_id in contract_options:
+            default_idx = list(contract_options.keys()).index(active_id)
+
+        selected_id = st.selectbox(
+            "Contract",
+            options=list(contract_options.keys()),
+            format_func=lambda x: contract_options[x],
+            index=default_idx,
+            key="contract_select_z1"
+        )
+    else:
+        st.warning("No contracts available")
+
+    st.markdown("**Filters**")
+
+    # Risk category filter
+    categories = ["All"] + list(set(r['category'] for r in sample_risks))
+    risk_category = st.selectbox("Category", categories, key="cat_filter_z1")
+    st.session_state["risk_category_filter"] = risk_category
+
+    # Risk type filter
+    if risk_category == "All":
+        types = ["All"] + list(set(r['type'] for r in sample_risks))
+    else:
+        types = ["All"] + list(set(r['type'] for r in sample_risks if r['category'] == risk_category))
+    risk_type = st.selectbox("Type", types, key="type_filter_z1")
+    st.session_state["risk_type_filter"] = risk_type
+
+
+def z2_risk_summary():
+    """Z2: Risk summary cards"""
+    section_header("Risk Summary", "⚠️")
+
+    filtered = filter_risks()
+    if not filtered:
+        st.info("No risks match the current filters.")
+        return
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        metric_card("Total Risks", len(filtered))
+    with col2:
+        high_count = sum(1 for r in filtered if r["severity"] == "High")
+        metric_card("High Severity", high_count)
+    with col3:
+        open_count = sum(
+            1
+            for r in filtered
+            if (r.get("status", "Open") == "Open")
+        )
+        metric_card("Open Items", open_count)
+
+
+def z3_response_status():
+    """Z3: Response status overview"""
+    section_header("Response Status", "📊")
+
+    filtered = filter_risks()
+    if not filtered:
+        st.info("No risks to display.")
+        return
+
+    status_counts = {"drafted": 0, "reviewed": 0, "sent": 0}
+
+    for r in filtered:
+        status = st.session_state["response_status"].get(r["id"], "drafted")
+        status_counts[status] += 1
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        status_badge(
+            f"Drafted – {status_counts['drafted']} items"
+        )
+    with col2:
+        status_badge(
+            f"Reviewed – {status_counts['reviewed']} items"
+        )
+    with col3:
+        status_badge(
+            f"Sent – {status_counts['sent']} items"
+        )
+
+    st.caption("Status is tracked per risk based on your actions in the detail pane.")
+
+
+def z4_response_detail():
+    """Z4: Detailed view + drafting area"""
+    section_header("Respond to a Specific Risk", "📝")
+
+    filtered = filter_risks()
+    if not filtered:
+        st.info("No risks available to respond to.")
+        return
+
+    # Ensure selected index is in range
+    if st.session_state["selected_risk_idx"] >= len(filtered):
+        st.session_state["selected_risk_idx"] = 0
+
+    risk = filtered[st.session_state["selected_risk_idx"]]
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.markdown(
+            f"### {risk['category']} — {risk['type']} "
+            f"{risk_badge(risk['severity'])}",
+            unsafe_allow_html=True,
+        )
+        st.markdown("**Original Clause**")
+        st.code(risk["clause"], language="markdown")
+
+        st.markdown("**Our Position & Talking Points**")
+        existing_notes = st.session_state["response_notes"].get(risk["id"], [])
+        default_text = "\n".join(existing_notes) if existing_notes else ""
+        new_notes = st.text_area(
+            "Draft response notes",
+            value=default_text,
+            height=200,
+        )
+
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("💾 Save Draft", key="save_draft"):
+                st.session_state["response_notes"][risk["id"]] = [
+                    line for line in new_notes.split("\n") if line.strip()
+                ]
+                st.session_state["response_status"][risk["id"]] = "drafted"
+                toast_success("Draft saved")
+
+        with col_btn2:
+            if st.button("📤 Mark as Reviewed", key="mark_reviewed"):
+                st.session_state["response_status"][risk["id"]] = "reviewed"
+                toast_success("Marked as reviewed")
+
+    with col2:
+        st.markdown("**Risk Info**")
+        st.write(f"Category: {risk['category']}")
+        st.write(f"Type: {risk['type']}")
+        st.write(f"Severity: {risk['severity']}")
+        st.write(f"Status: {risk.get('status', 'Open')}")
+        st.markdown("---")
+
+        st.markdown("**Suggested Tone**")
+        st.write(
+            "- Start with appreciation\n"
+            "- Acknowledge their position\n"
+            "- Propose a balanced alternative"
+        )
+
+        st.markdown("**Common Positions**")
+        st.write(
+            "- Cap indemnity at 1x–2x fees\n"
+            "- Reduce late fee interest rate\n"
+            "- Extend termination notice periods"
+        )
+
+    st.markdown("---")
+
+    # Navigation between risks
+    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 2])
+
+    with col_nav1:
+        if st.button("⬅️ Previous", key="prev_risk"):
+            st.session_state["selected_risk_idx"] = max(
+                0, st.session_state["selected_risk_idx"] - 1
+            )
+            st.rerun()
+    with col_nav2:
+        if st.button("Next ➡️", key="next_risk"):
+            st.session_state["selected_risk_idx"] = min(
+                len(filtered) - 1, st.session_state["selected_risk_idx"] + 1
+            )
+            st.rerun()
+    with col_nav3:
+        st.caption(
+            f"Viewing {st.session_state["selected_risk_idx"] + 1} "
+            f"of {len(filtered)} matching risks."
+        )
+
+
+def z5_response_history():
+    """Z5: History of responses"""
+    section_header("Response History", "📜")
+
+    if not st.session_state["response_notes"]:
+        st.info("No responses have been drafted yet.")
+        return
+
+    for risk in sample_risks:
+        notes = st.session_state["response_notes"].get(risk["id"])
+        if not notes:
+            continue
+
+        with st.expander(
+            f"{risk['category']} — {risk['type']} "
+            f"({len(notes)} note{'s' if len(notes) != 1 else ''})"
+        ):
+            for i, note in enumerate(notes, start=1):
+                st.markdown(f"**Note {i}:** {note}")
+
+
+def z6_quick_actions():
+    """Z6: Quick actions bar"""
+    section_header("Quick Actions", "⚡")
+
+    col1, col2, col3 = st.columns(3)
+
+    def mark_all(status_val: str, label: str):
+        for r in sample_risks:
+            st.session_state["response_status"][r["id"]] = status_val
+        toast_success(f"Marked all as {label}")
+
+    with col1:
+        if st.button("Mark All Drafted", key="all_drafted"):
+            mark_all("drafted", "drafted")
+    with col2:
+        if st.button("Mark All Reviewed", key="all_reviewed"):
+            mark_all("reviewed", "reviewed")
+    with col3:
+        if st.button("Mark All Sent", key="all_sent"):
+            mark_all("sent", "sent")
+
+    st.markdown("---")
+
+    # Summary stats
+    st.markdown("**Response Stats**")
+    total = len(sample_risks)
+    completed = sum(
+        1 for s in st.session_state["response_status"].values() if s == "sent"
+    )
+    st.caption(f"Completed: {completed}/{total}")
+
+
+def z7_extra():
+    """Z7: Additional controls"""
+    pass
+
+
+# Render via standard CIP wrapper
+def main():
+    render_page(
+        page_title="Plan Your Response",
+        page_icon="🤝",
+        layout="wide",
+        z1=z1_contract_and_filters,
+        z2=z2_risk_summary,
+        z3=z3_response_status,
+        z4=z4_response_detail,
+        z5=z5_response_history,
+        z6=z6_quick_actions,
+        z7=z7_extra,
+    )
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,145 @@
+{
+  "version": "1.2",
+  "patterns": [
+    {
+      "pattern_id": "INDEMNIFICATION_UNLIMITED",
+      "category": "CRITICAL",
+      "keywords": ["unlimited indemnification", "indemnify and hold harmless", "unlimited liability", "full indemnification"],
+      "success_probability": 0.45,
+      "description": "Unlimited indemnification exposure without caps"
+    },
+    {
+      "pattern_id": "INDEMNIFICATION_BROAD",
+      "category": "HIGH",
+      "keywords": ["indemnification", "indemnify", "hold harmless", "defend"],
+      "success_probability": 0.65,
+      "description": "Broad indemnification terms"
+    },
+    {
+      "pattern_id": "LIABILITY_CAP_MISSING",
+      "category": "CRITICAL",
+      "keywords": ["no limitation", "unlimited damages", "no cap on liability"],
+      "success_probability": 0.40,
+      "description": "Missing or removed liability cap"
+    },
+    {
+      "pattern_id": "LIABILITY_CAP_LOW",
+      "category": "HIGH",
+      "keywords": ["liability cap", "limitation of liability", "aggregate liability", "maximum liability"],
+      "success_probability": 0.70,
+      "description": "Liability cap present but may be inadequate"
+    },
+    {
+      "pattern_id": "PAYMENT_TERMS_EXTENDED",
+      "category": "HIGH",
+      "keywords": ["net 60", "net 90", "net 120", "payment within 60", "payment within 90"],
+      "success_probability": 0.75,
+      "description": "Extended payment terms affecting cash flow"
+    },
+    {
+      "pattern_id": "PAYMENT_TERMS_STANDARD",
+      "category": "MODERATE",
+      "keywords": ["net 30", "payment terms", "invoice", "payment within"],
+      "success_probability": 0.85,
+      "description": "Standard payment terms"
+    },
+    {
+      "pattern_id": "IP_ASSIGNMENT_FULL",
+      "category": "CRITICAL",
+      "keywords": ["assign all intellectual property", "work for hire", "ip assignment", "transfer of ownership"],
+      "success_probability": 0.35,
+      "description": "Full IP assignment to counterparty"
+    },
+    {
+      "pattern_id": "IP_LICENSE_BROAD",
+      "category": "HIGH",
+      "keywords": ["perpetual license", "irrevocable license", "royalty-free license", "worldwide license"],
+      "success_probability": 0.60,
+      "description": "Broad IP licensing terms"
+    },
+    {
+      "pattern_id": "TERMINATION_CONVENIENCE",
+      "category": "HIGH",
+      "keywords": ["termination for convenience", "terminate without cause", "terminate at any time"],
+      "success_probability": 0.55,
+      "description": "Unilateral termination for convenience"
+    },
+    {
+      "pattern_id": "TERMINATION_CAUSE",
+      "category": "MODERATE",
+      "keywords": ["termination for cause", "material breach", "cure period", "right to terminate"],
+      "success_probability": 0.80,
+      "description": "Standard termination for cause provisions"
+    },
+    {
+      "pattern_id": "WARRANTY_DISCLAIMER",
+      "category": "HIGH",
+      "keywords": ["as is", "without warranty", "no warranties", "disclaimer of warranties"],
+      "success_probability": 0.50,
+      "description": "Broad warranty disclaimers"
+    },
+    {
+      "pattern_id": "WARRANTY_LIMITED",
+      "category": "MODERATE",
+      "keywords": ["warranty", "warrant that", "represents and warrants", "warranty period"],
+      "success_probability": 0.75,
+      "description": "Limited warranty terms"
+    },
+    {
+      "pattern_id": "CONFIDENTIALITY_PERPETUAL",
+      "category": "HIGH",
+      "keywords": ["perpetual confidentiality", "survive indefinitely", "no expiration"],
+      "success_probability": 0.60,
+      "description": "Perpetual confidentiality obligations"
+    },
+    {
+      "pattern_id": "CONFIDENTIALITY_STANDARD",
+      "category": "MODERATE",
+      "keywords": ["confidential information", "confidentiality", "non-disclosure", "proprietary information"],
+      "success_probability": 0.85,
+      "description": "Standard confidentiality terms"
+    },
+    {
+      "pattern_id": "AUDIT_RIGHTS_BROAD",
+      "category": "HIGH",
+      "keywords": ["audit rights", "right to audit", "inspection rights", "access to records"],
+      "success_probability": 0.65,
+      "description": "Broad audit and inspection rights"
+    },
+    {
+      "pattern_id": "ASSIGNMENT_RESTRICTED",
+      "category": "MODERATE",
+      "keywords": ["assignment", "may not assign", "prior written consent", "non-assignable"],
+      "success_probability": 0.80,
+      "description": "Assignment restrictions"
+    },
+    {
+      "pattern_id": "FORCE_MAJEURE",
+      "category": "MODERATE",
+      "keywords": ["force majeure", "act of god", "beyond reasonable control", "unforeseeable circumstances"],
+      "success_probability": 0.85,
+      "description": "Force majeure provisions"
+    },
+    {
+      "pattern_id": "GOVERNING_LAW",
+      "category": "ADMIN",
+      "keywords": ["governing law", "governed by", "laws of the state", "jurisdiction"],
+      "success_probability": 0.90,
+      "description": "Governing law and jurisdiction"
+    },
+    {
+      "pattern_id": "NOTICE_PROVISIONS",
+      "category": "ADMIN",
+      "keywords": ["notice", "written notice", "notice shall be", "deliver notice"],
+      "success_probability": 0.95,
+      "description": "Notice requirements"
+    },
+    {
+      "pattern_id": "AMENDMENT_REQUIREMENTS",
+      "category": "ADMIN",
+      "keywords": ["amendment", "modification", "written amendment", "no oral modification"],
+      "success_probability": 0.90,
+      "description": "Amendment and modification requirements"
+    }
+  ]
+}

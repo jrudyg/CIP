@@ -1,0 +1,191 @@
+{
+  "timestamp": "2025-12-09T21:41:58.098667",
+  "module": "layout_diagnostics",
+  "summary": {
+    "suites_total": 5,
+    "suites_passed": 5,
+    "tests_total": 37,
+    "tests_passed": 37,
+    "overall_status": "PASS"
+  },
+  "results": [
+    {
+      "suite": "Panel Dimension Logger",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "single_capture",
+          "passed": true
+        },
+        {
+          "test": "capture_all",
+          "passed": true
+        },
+        {
+          "test": "get_latest",
+          "passed": true
+        },
+        {
+          "test": "history_filtering",
+          "passed": true
+        },
+        {
+          "test": "snapshot_count",
+          "passed": true
+        },
+        {
+          "test": "export_history",
+          "passed": true
+        },
+        {
+          "test": "clear_history",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "Scroll Sync Monitor",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "initial_state",
+          "passed": true
+        },
+        {
+          "test": "no_record_when_not_monitoring",
+          "passed": true
+        },
+        {
+          "test": "start_monitoring",
+          "passed": true
+        },
+        {
+          "test": "record_events",
+          "passed": true
+        },
+        {
+          "test": "event_count",
+          "passed": true
+        },
+        {
+          "test": "filter_by_source",
+          "passed": true
+        },
+        {
+          "test": "filter_by_sync_mode",
+          "passed": true
+        },
+        {
+          "test": "sync_mode_stats",
+          "passed": true
+        },
+        {
+          "test": "stop_monitoring",
+          "passed": true
+        },
+        {
+          "test": "export_events",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "Panel Position Validator",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "valid_dimensions",
+          "passed": true
+        },
+        {
+          "test": "too_narrow_fails",
+          "passed": true
+        },
+        {
+          "test": "too_wide_fails",
+          "passed": true
+        },
+        {
+          "test": "hidden_panel_warning",
+          "passed": true
+        },
+        {
+          "test": "valid_layout",
+          "passed": true
+        },
+        {
+          "test": "invalid_total_width",
+          "passed": true
+        },
+        {
+          "test": "valid_scroll_offset",
+          "passed": true
+        },
+        {
+          "test": "negative_offset_fails",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "Diagnostic Panel (Aggregate)",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "logging",
+          "passed": true
+        },
+        {
+          "test": "filter_by_level",
+          "passed": true
+        },
+        {
+          "test": "dimension_capture",
+          "passed": true
+        },
+        {
+          "test": "scroll_monitoring",
+          "passed": true
+        },
+        {
+          "test": "report_generation",
+          "passed": true
+        },
+        {
+          "test": "report_dimensions",
+          "passed": true
+        },
+        {
+          "test": "report_scroll_events",
+          "passed": true
+        },
+        {
+          "test": "report_log_summary",
+          "passed": true
+        },
+        {
+          "test": "clear_all",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "Read-Only Behavior",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "readonly_flag",
+          "passed": true
+        },
+        {
+          "test": "no_workspace_mode_import",
+          "passed": true
+        },
+        {
+          "test": "independent_execution",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

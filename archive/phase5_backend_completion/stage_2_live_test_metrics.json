@@ -1,0 +1,60 @@
+{
+  "iterations": [
+    {
+      "iteration": 1,
+      "latency_ms": 2.28,
+      "sae_triggered": true,
+      "erce_triggered": true,
+      "status": "success"
+    },
+    {
+      "iteration": 2,
+      "latency_ms": 0.96,
+      "sae_triggered": true,
+      "erce_triggered": true,
+      "status": "success"
+    },
+    {
+      "iteration": 3,
+      "latency_ms": 0.91,
+      "sae_triggered": true,
+      "erce_triggered": true,
+      "status": "success"
+    },
+    {
+      "iteration": 4,
+      "latency_ms": 0.87,
+      "sae_triggered": true,
+      "erce_triggered": true,
+      "status": "success"
+    },
+    {
+      "iteration": 5,
+      "latency_ms": 0.75,
+      "sae_triggered": true,
+      "erce_triggered": true,
+      "status": "success"
+    }
+  ],
+  "start_time": "2025-12-08T21:44:25.889315",
+  "stage": "stage_2",
+  "config": {
+    "flag_sae": true,
+    "flag_erce": true,
+    "flag_birl": false,
+    "flag_far": false
+  },
+  "summary": {
+    "total_iterations": 5,
+    "successful_iterations": 5,
+    "p95_latency_ms": 2.28,
+    "avg_latency_ms": 1.15,
+    "max_latency_ms": 2.28,
+    "min_latency_ms": 0.75
+  },
+  "resources": {
+    "peak_cpu_pct": 0.0,
+    "peak_memory_mb": 72.7
+  },
+  "end_time": "2025-12-08T21:44:28.386688"
+}

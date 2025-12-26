@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0.0",
+  "created_at": "2025-12-06T19:42:29.354133",
+  "updated_at": "2025-12-06T19:42:29.354141",
+  "patterns": [
+    {
+      "pattern_id": "INDEM_UNLIMITED_001",
+      "pattern_name": "Unlimited Indemnification",
+      "risk_category": "CRITICAL",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)(unlimited|uncapped)\\s+(indemnif|liability)",
+      "success_probability": 0.35,
+      "description": "Detects unlimited or uncapped indemnification clauses",
+      "priority": 100,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "INDEM_CONSEQUENTIAL_002",
+      "pattern_name": "Consequential Damages Included",
+      "risk_category": "HIGH",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)consequential\\s+damages?\\s+(included|not\\s+excluded)",
+      "success_probability": 0.55,
+      "description": "Detects inclusion of consequential damages",
+      "priority": 90,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "TERM_AUTO_RENEW_003",
+      "pattern_name": "Auto-Renewal Clause",
+      "risk_category": "MODERATE",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)(auto|automatic)\\s*(renew|extend)",
+      "success_probability": 0.75,
+      "description": "Detects automatic renewal terms",
+      "priority": 60,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "PAY_NET_EXTENDED_004",
+      "pattern_name": "Extended Payment Terms",
+      "risk_category": "MODERATE",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)net\\s*(60|90|120)",
+      "success_probability": 0.7,
+      "description": "Detects extended payment terms (Net 60+)",
+      "priority": 50,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "IP_ASSIGN_005",
+      "pattern_name": "IP Assignment",
+      "risk_category": "HIGH",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)(assign|transfer)\\s+(all|any)?\\s*(intellectual property|ip|patent|copyright)",
+      "success_probability": 0.6,
+      "description": "Detects broad IP assignment clauses",
+      "priority": 85,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "NONCOMP_BROAD_006",
+      "pattern_name": "Broad Non-Compete",
+      "risk_category": "HIGH",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)non-?compete\\s+.{0,50}(worldwide|global|unlimited)",
+      "success_probability": 0.45,
+      "description": "Detects overly broad non-compete clauses",
+      "priority": 80,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "AUDIT_RIGHTS_007",
+      "pattern_name": "Audit Rights",
+      "risk_category": "ADMIN",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)audit\\s+(right|access)",
+      "success_probability": 0.85,
+      "description": "Detects audit rights provisions",
+      "priority": 30,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    },
+    {
+      "pattern_id": "NOTICE_PERIOD_008",
+      "pattern_name": "Notice Period Change",
+      "risk_category": "ADMIN",
+      "pattern_type": "regex",
+      "pattern_value": "(?i)notice\\s+.{0,20}(day|week|month)",
+      "success_probability": 0.9,
+      "description": "Detects notice period provisions",
+      "priority": 20,
+      "enabled": true,
+      "created_at": "2025-01-01T00:00:00",
+      "updated_at": "2025-01-01T00:00:00"
+    }
+  ]
+}

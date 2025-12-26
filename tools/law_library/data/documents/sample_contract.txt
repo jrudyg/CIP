@@ -1,0 +1,174 @@
+SOFTWARE DEVELOPMENT AGREEMENT
+
+This Software Development Agreement ("Agreement") is entered into as of January 15, 2024 ("Effective Date"), by and between TechCorp Industries, Inc., a Delaware corporation with its principal place of business at 123 Technology Drive, San Francisco, California 94105 ("Client"), and CodeCraft Solutions LLC, a California limited liability company with its principal place of business at 456 Developer Lane, Palo Alto, California 94301 ("Developer").
+
+RECITALS
+
+WHEREAS, Client desires to engage Developer to design, develop, and deliver certain custom software applications; and
+
+WHEREAS, Developer represents that it has the expertise and resources to perform the services described herein;
+
+NOW, THEREFORE, in consideration of the mutual covenants and agreements contained herein, the parties agree as follows:
+
+ARTICLE 1: SCOPE OF WORK
+
+Section 1.1 Services
+Developer shall provide software development services as described in the Statement of Work attached as Exhibit A ("Services"). The Services shall include:
+
+(a) Requirements analysis and system design
+(b) Software development and coding
+(c) Testing and quality assurance
+(d) Documentation and user manuals
+(e) Deployment and implementation support
+
+Section 1.2 Deliverables
+Developer shall deliver the following work products ("Deliverables"):
+
+(a) Functional software application meeting specifications in Exhibit A
+(b) Source code and compiled binaries
+(c) Technical documentation
+(d) User documentation and training materials
+(e) Test results and quality assurance reports
+
+Section 1.3 Timeline
+Developer shall complete the Deliverables according to the milestone schedule in Exhibit B. Time is of the essence for this Agreement.
+
+ARTICLE 2: COMPENSATION
+
+Section 2.1 Fees
+Client shall pay Developer a total fee of $250,000 ("Total Fee") for completion of the Services and Deliverables, payable according to the following milestone schedule:
+
+(a) $50,000 upon execution of this Agreement
+(b) $75,000 upon completion of requirements and design (Milestone 1)
+(c) $75,000 upon completion of development and testing (Milestone 2)
+(d) $50,000 upon final acceptance and deployment (Milestone 3)
+
+Section 2.2 Payment Terms
+All invoices are due within 30 days of receipt. Late payments shall accrue interest at the rate of 1.5% per month or the maximum rate permitted by law, whichever is less.
+
+Section 2.3 Expenses
+Client shall reimburse Developer for all reasonable, pre-approved out-of-pocket expenses incurred in connection with the Services, including travel, accommodations, and third-party software licenses.
+
+ARTICLE 3: INTELLECTUAL PROPERTY
+
+Section 3.1 Ownership of Deliverables
+Upon Client's full payment of all fees due under this Agreement, all right, title, and interest in and to the Deliverables, including all intellectual property rights therein, shall be owned exclusively by Client. This includes all copyright, patent rights, trade secrets, and other proprietary rights.
+
+Section 3.2 Work for Hire
+The parties intend that all Deliverables shall constitute "works made for hire" as that term is defined under U.S. copyright law. To the extent any Deliverable does not qualify as a work made for hire, Developer hereby assigns to Client all right, title, and interest in such Deliverable.
+
+Section 3.3 Developer Tools and Pre-Existing Materials
+Developer retains all rights to its pre-existing tools, utilities, libraries, and frameworks used in creating the Deliverables ("Developer Materials"). Developer grants Client a perpetual, irrevocable, worldwide, royalty-free license to use Developer Materials solely as incorporated in the Deliverables.
+
+Section 3.4 Third-Party Components
+Developer shall identify all third-party software components incorporated into the Deliverables and ensure Client has proper licenses for such components.
+
+ARTICLE 4: WARRANTIES
+
+Section 4.1 Developer Warranties
+Developer warrants that:
+
+(a) It has the right and authority to enter into this Agreement
+(b) The Deliverables will be developed in a professional and workmanlike manner
+(c) The Deliverables will conform to the specifications in Exhibit A
+(d) The Deliverables will not infringe any third-party intellectual property rights
+(e) The Deliverables will be free from material defects for 90 days after acceptance
+
+Section 4.2 Warranty Remedies
+If Client notifies Developer of a warranty breach during the warranty period, Developer shall, at its option, either (a) repair or replace the defective Deliverable, or (b) refund the fees paid for the defective Deliverable.
+
+Section 4.3 Disclaimer
+EXCEPT AS EXPRESSLY SET FORTH IN SECTION 4.1, DEVELOPER MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+ARTICLE 5: CONFIDENTIALITY
+
+Section 5.1 Confidential Information
+Each party may disclose confidential information to the other party in connection with this Agreement. "Confidential Information" means non-public information designated as confidential or that reasonably should be considered confidential.
+
+Section 5.2 Obligations
+Each party shall:
+
+(a) Maintain the confidentiality of the other party's Confidential Information
+(b) Use Confidential Information only for purposes of this Agreement
+(c) Limit disclosure to employees and contractors with a need to know
+(d) Protect Confidential Information with the same degree of care used for its own confidential information, but no less than reasonable care
+
+Section 5.3 Exceptions
+Confidentiality obligations do not apply to information that:
+
+(a) Is or becomes publicly available through no breach of this Agreement
+(b) Was rightfully known prior to disclosure
+(c) Is independently developed without use of Confidential Information
+(d) Must be disclosed pursuant to law or court order
+
+ARTICLE 6: LIMITATION OF LIABILITY
+
+Section 6.1 Limitation
+EXCEPT FOR BREACHES OF ARTICLE 5 (CONFIDENTIALITY) OR ARTICLE 3 (INTELLECTUAL PROPERTY), NEITHER PARTY'S TOTAL LIABILITY ARISING OUT OF OR RELATED TO THIS AGREEMENT SHALL EXCEED THE TOTAL FEES PAID OR PAYABLE UNDER THIS AGREEMENT.
+
+Section 6.2 Consequential Damages
+IN NO EVENT SHALL EITHER PARTY BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFITS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ARTICLE 7: TERM AND TERMINATION
+
+Section 7.1 Term
+This Agreement commences on the Effective Date and continues until all Services are completed and all payments made, unless earlier terminated as provided herein.
+
+Section 7.2 Termination for Convenience
+Client may terminate this Agreement for any reason upon 30 days' written notice to Developer. Upon such termination, Client shall pay Developer for all Services performed and expenses incurred through the termination date, plus a termination fee equal to 20% of the remaining unpaid Total Fee.
+
+Section 7.3 Termination for Cause
+Either party may terminate this Agreement immediately upon written notice if the other party:
+
+(a) Materially breaches this Agreement and fails to cure within 30 days of written notice
+(b) Becomes insolvent or files for bankruptcy
+(c) Ceases business operations
+
+Section 7.4 Effect of Termination
+Upon termination:
+
+(a) Developer shall deliver all completed and in-progress Deliverables to Client
+(b) Client shall pay all undisputed amounts due
+(c) Articles 3, 5, 6, and 8 shall survive termination
+
+ARTICLE 8: GENERAL PROVISIONS
+
+Section 8.1 Governing Law
+This Agreement shall be governed by the laws of the State of California, without regard to its conflicts of law provisions.
+
+Section 8.2 Dispute Resolution
+Any dispute arising out of this Agreement shall be resolved first through good faith negotiation. If negotiation fails within 30 days, the dispute shall be submitted to binding arbitration under the rules of the American Arbitration Association.
+
+Section 8.3 Independent Contractor
+Developer is an independent contractor, not an employee or agent of Client. Developer shall be responsible for all taxes, insurance, and benefits for its personnel.
+
+Section 8.4 Assignment
+Neither party may assign this Agreement without the other party's prior written consent, except that either party may assign to a successor in a merger, acquisition, or sale of all or substantially all of its assets.
+
+Section 8.5 Entire Agreement
+This Agreement, including all exhibits, constitutes the entire agreement between the parties and supersedes all prior agreements and understandings, whether written or oral.
+
+Section 8.6 Amendments
+This Agreement may be amended only by a written instrument signed by both parties.
+
+Section 8.7 Notices
+All notices under this Agreement shall be in writing and delivered to the addresses set forth above or as otherwise specified by the parties.
+
+Section 8.8 Severability
+If any provision of this Agreement is held invalid or unenforceable, the remaining provisions shall remain in full force and effect.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+TECHCORP INDUSTRIES, INC.
+
+By: _________________________
+Name: Jennifer Smith
+Title: Chief Technology Officer
+Date: January 15, 2024
+
+CODECRAFT SOLUTIONS LLC
+
+By: _________________________
+Name: Michael Chen
+Title: Managing Partner
+Date: January 15, 2024

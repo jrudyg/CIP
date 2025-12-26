@@ -1,0 +1,123 @@
+MASTER SERVICE AGREEMENT
+
+This Master Service Agreement ("Agreement") is entered into as of January 15, 2025 ("Effective Date") by and between:
+
+TECHCORP SYSTEMS, INC., a Delaware corporation with offices at 500 Technology Way, Suite 100, San Jose, CA 95110 ("Customer")
+
+and
+
+ACME INTEGRATIONS LLC, a California limited liability company with offices at 1234 Innovation Drive, San Francisco, CA 94105 ("Service Provider")
+
+RECITALS
+
+WHEREAS, Customer desires to engage Service Provider to provide certain professional services related to technology integration and systems implementation; and
+
+WHEREAS, Service Provider has the expertise and capacity to provide such services;
+
+NOW, THEREFORE, in consideration of the mutual covenants and agreements set forth herein, the parties agree as follows:
+
+ARTICLE 1 - DEFINITIONS
+
+1.1 "Confidential Information" means any non-public information disclosed by either party to the other, whether orally or in writing, that is designated as confidential or that reasonably should be understood to be confidential.
+
+1.2 "Deliverables" means any work product, documents, software, or other materials created by Service Provider under a Statement of Work.
+
+1.3 "Services" means the professional services to be provided by Service Provider as described in one or more Statements of Work.
+
+1.4 "Statement of Work" or "SOW" means a written document executed by both parties that describes specific Services to be performed.
+
+ARTICLE 2 - SERVICES
+
+2.1 Scope. Service Provider shall perform the Services described in each SOW in accordance with the terms of this Agreement and such SOW.
+
+2.2 Standards. Service Provider shall perform all Services in a professional and workmanlike manner consistent with industry standards.
+
+2.3 Personnel. Service Provider shall assign qualified personnel to perform the Services and shall be responsible for their supervision.
+
+ARTICLE 3 - PAYMENT TERMS
+
+3.1 Fees. Customer shall pay Service Provider the fees set forth in each SOW.
+
+3.2 Payment Terms. Unless otherwise specified in the applicable SOW, invoices are due and payable within thirty (30) days of invoice date.
+
+3.3 Disputed Invoices. In the event of a bona fide dispute regarding any invoice amount, Customer shall provide written notice within fifteen (15) days of invoice receipt, identifying the specific disputed items. Customer shall pay all undisputed amounts per original terms. The parties shall engage in good faith discussions to resolve the dispute.
+
+3.4 Late Payments. Any undisputed amounts not paid when due shall accrue interest at the rate of 1.5% per month or the maximum rate permitted by law, whichever is less.
+
+ARTICLE 4 - LIMITATION OF LIABILITY
+
+4.1 Cap on Liability. EXCEPT FOR BREACHES OF CONFIDENTIALITY, INDEMNIFICATION OBLIGATIONS, OR GROSS NEGLIGENCE, NEITHER PARTY'S TOTAL LIABILITY UNDER THIS AGREEMENT SHALL EXCEED THE TOTAL FEES PAID OR PAYABLE TO SERVICE PROVIDER IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+
+4.2 Exclusion of Damages. IN NO EVENT SHALL EITHER PARTY BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.
+
+4.3 Carve-Outs. The limitations in this Article 4 shall not apply to:
+    (i) breach of confidentiality obligations;
+    (ii) indemnification obligations under Article 7;
+    (iii) gross negligence or willful misconduct.
+
+ARTICLE 5 - INDEMNIFICATION
+
+5.1 Mutual Indemnification. Each party shall indemnify, defend, and hold harmless the other party from and against any third-party claims arising from:
+    (a) the indemnifying party's breach of this Agreement;
+    (b) the indemnifying party's negligence or willful misconduct;
+    (c) the indemnifying party's violation of applicable law.
+
+5.2 IP Indemnification. Service Provider shall indemnify Customer against claims that the Deliverables infringe any third-party intellectual property rights. To Service Provider's knowledge, the Deliverables do not infringe any third-party rights.
+
+5.3 Notice. The indemnified party shall provide prompt written notice of any claim (but failure to provide notice shall not relieve the indemnifying party except to the extent prejudiced).
+
+5.4 Mitigation. The indemnified party shall use commercially reasonable efforts to mitigate damages.
+
+ARTICLE 6 - CONFIDENTIALITY
+
+6.1 Protection. Each party shall protect the other party's Confidential Information using the same degree of care it uses to protect its own confidential information, but no less than reasonable care.
+
+6.2 Permitted Disclosures. Confidential Information may be disclosed to employees and contractors who have a need to know and are bound by confidentiality obligations at least as protective as those herein.
+
+6.3 Return or Destruction. Upon termination or request, each party shall return or certify destruction of the other party's Confidential Information within thirty (30) days.
+
+ARTICLE 7 - INTELLECTUAL PROPERTY
+
+7.1 Pre-Existing IP. Each party retains ownership of its pre-existing intellectual property. Service Provider grants Customer a non-exclusive license to use Service Provider's pre-existing IP solely as incorporated in the Deliverables.
+
+7.2 Work Product. Customer shall own all Deliverables created specifically for Customer under a SOW.
+
+7.3 Improvements. Any improvements to Service Provider's pre-existing IP shall remain the property of Service Provider, with a license granted to Customer as needed for use of the Deliverables.
+
+ARTICLE 8 - TERM AND TERMINATION
+
+8.1 Term. This Agreement shall commence on the Effective Date and continue for three (3) years, unless earlier terminated.
+
+8.2 Termination for Convenience. Either party may terminate this Agreement upon ninety (90) days written notice.
+
+8.3 Termination for Cause. Either party may terminate this Agreement upon thirty (30) days written notice if the other party materially breaches this Agreement and fails to cure such breach within the notice period.
+
+8.4 Effect of Termination. Upon termination:
+    (a) Customer shall pay for all Services performed through termination;
+    (b) Service Provider shall provide reasonable transition assistance for ninety (90) days at then-current rates;
+    (c) Articles 4, 5, 6, and 7 shall survive termination.
+
+ARTICLE 9 - GENERAL PROVISIONS
+
+9.1 Assignment. Neither party may assign this Agreement without prior written consent, except in connection with a merger, acquisition, or sale of substantially all assets. Neither party may assign to a direct competitor of the other party.
+
+9.2 Governing Law. This Agreement shall be governed by the laws of the State of California.
+
+9.3 Dispute Resolution. Any dispute shall be escalated to executive leadership before formal proceedings. Disputes shall be resolved by binding arbitration in San Francisco, California.
+
+9.4 Notices. All notices shall be in writing and sent to the addresses set forth above.
+
+9.5 Entire Agreement. This Agreement and all SOWs constitute the entire agreement between the parties regarding the subject matter hereof.
+
+9.6 Amendments. This Agreement may only be amended in writing signed by both parties.
+
+9.7 Waiver. No waiver of any provision shall be effective unless in writing.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+TECHCORP SYSTEMS, INC.                    ACME INTEGRATIONS LLC
+
+By: _________________________             By: _________________________
+Name: Sarah Johnson                       Name: Michael Chen
+Title: VP of Procurement                  Title: Managing Director
+Date: January 15, 2025                    Date: January 15, 2025

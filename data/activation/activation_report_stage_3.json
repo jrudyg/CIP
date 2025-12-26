@@ -1,0 +1,48 @@
+{
+  "report_id": "activation_report_stage_3",
+  "stage_id": "stage_3",
+  "generated_at": "2025-12-09T17:53:22.448990",
+  "no_op": false,
+  "flags": {
+    "before": {
+      "flag_sae": true,
+      "flag_erce": true,
+      "flag_birl": true,
+      "flag_far": false
+    },
+    "after": {
+      "flag_sae": true,
+      "flag_erce": true,
+      "flag_birl": true,
+      "flag_far": false
+    },
+    "diff": {}
+  },
+  "validation": {
+    "all_passed": true,
+    "tests_passed": 3,
+    "tests_failed": 0,
+    "tests_warning": 0,
+    "checks": [
+      {
+        "check_id": "birl_narratives",
+        "status": "pass",
+        "details": "Narratives generation ready"
+      },
+      {
+        "check_id": "hallucination_shields",
+        "status": "pass",
+        "details": "Hallucination shields engaged"
+      },
+      {
+        "check_id": "agent_role_cip_reasoning",
+        "status": "pass",
+        "details": "agent_role='cip-reasoning' found in 1 entries"
+      }
+    ]
+  },
+  "reversible": true,
+  "rollback_command": "python stage_runner.py rollback stage_3",
+  "previous_stage": "stage_2",
+  "next_stage": "stage_4"
+}

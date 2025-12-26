@@ -1,0 +1,168 @@
+MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of January 10, 2025 (the "Effective Date") by and between:
+
+ENTERPRISE DYNAMICS INC., a Delaware corporation ("Party A")
+
+and
+
+CLOUDTECH SOLUTIONS LLC, a Virginia limited liability company ("Party B")
+
+(each a "Party" and collectively the "Parties")
+
+BACKGROUND
+
+The Parties are considering a potential business relationship involving technology consulting and integration services. In connection with evaluating this opportunity, each Party may disclose certain confidential and proprietary information to the other.
+
+AGREEMENT
+
+The Parties agree as follows:
+
+1. DEFINITION OF CONFIDENTIAL INFORMATION
+
+1.1 "Confidential Information" means any information disclosed by one Party (the "Disclosing Party") to the other Party (the "Receiving Party"), whether in oral, written, graphic, electronic, or any other form, that:
+
+    (a) is marked as "confidential," "proprietary," or with similar designation; or
+
+    (b) by its nature or the circumstances of its disclosure should reasonably be understood to be confidential.
+
+1.2 Confidential Information includes, without limitation:
+
+    (a) Technical information: inventions, designs, algorithms, software, source code, architectures, specifications, prototypes, and research data;
+
+    (b) Business information: strategies, plans, forecasts, financial data, pricing, customer lists, vendor relationships, and marketing plans;
+
+    (c) Organizational information: personnel data, operational procedures, and internal policies.
+
+1.3 Exclusions. Confidential Information does not include information that:
+
+    (a) is or becomes publicly available through no fault of the Receiving Party;
+
+    (b) was lawfully in the Receiving Party's possession before disclosure, as evidenced by written records;
+
+    (c) is independently developed by the Receiving Party without use of or reference to the Disclosing Party's Confidential Information;
+
+    (d) is lawfully obtained from a third party who has the right to disclose it without restriction.
+
+2. OBLIGATIONS OF RECEIVING PARTY
+
+2.1 Use Restriction. The Receiving Party shall use Confidential Information solely for evaluating and pursuing the potential business relationship between the Parties (the "Purpose") and for no other purpose.
+
+2.2 Non-Disclosure. The Receiving Party shall not disclose Confidential Information to any third party without the prior written consent of the Disclosing Party.
+
+2.3 Protection Standard. The Receiving Party shall protect Confidential Information using at least the same degree of care it uses to protect its own confidential information of similar nature and importance, but in no event less than reasonable care.
+
+2.4 Authorized Recipients. The Receiving Party may disclose Confidential Information only to its employees, officers, directors, contractors, and professional advisors who:
+
+    (a) have a legitimate need to know the information for the Purpose;
+
+    (b) are informed of the confidential nature of the information; and
+
+    (c) are bound by confidentiality obligations at least as protective as those in this Agreement.
+
+2.5 Responsibility. The Receiving Party shall be responsible for any breach of this Agreement by its authorized recipients.
+
+3. COMPELLED DISCLOSURE
+
+3.1 If the Receiving Party is legally compelled to disclose Confidential Information, it shall:
+
+    (a) provide prompt written notice to the Disclosing Party (to the extent legally permitted);
+
+    (b) cooperate with the Disclosing Party in seeking a protective order or other appropriate remedy;
+
+    (c) disclose only that portion of the Confidential Information that is legally required; and
+
+    (d) use reasonable efforts to ensure that any disclosed information is treated confidentially.
+
+4. OWNERSHIP AND NO LICENSE
+
+4.1 Ownership. All Confidential Information remains the property of the Disclosing Party. No license or other rights to Confidential Information are granted except the limited right to use the information for the Purpose.
+
+4.2 No Implied Rights. Nothing in this Agreement grants the Receiving Party any rights in or to any patents, copyrights, trademarks, trade secrets, or other intellectual property rights of the Disclosing Party.
+
+4.3 No Obligation. Nothing in this Agreement obligates either Party to:
+
+    (a) disclose any particular information;
+
+    (b) enter into any business relationship or transaction;
+
+    (c) purchase or sell any products or services; or
+
+    (d) negotiate or conclude any agreement.
+
+5. RETURN OR DESTRUCTION
+
+5.1 Upon termination of this Agreement, written request by the Disclosing Party, or conclusion of discussions regarding the potential business relationship:
+
+    (a) The Receiving Party shall promptly return or destroy all Confidential Information, including all copies, summaries, and extracts;
+
+    (b) Upon request, the Receiving Party shall certify in writing that all Confidential Information has been returned or destroyed;
+
+    (c) The Receiving Party may retain one archival copy for legal compliance purposes, subject to continued confidentiality obligations.
+
+6. NO WARRANTY
+
+6.1 ALL CONFIDENTIAL INFORMATION IS PROVIDED "AS IS." THE DISCLOSING PARTY MAKES NO WARRANTIES, EXPRESS OR IMPLIED, REGARDING THE ACCURACY, COMPLETENESS, OR PERFORMANCE OF ANY CONFIDENTIAL INFORMATION.
+
+6.2 Neither Party shall be liable for any decisions or actions taken by the other Party based on Confidential Information.
+
+7. TERM AND SURVIVAL
+
+7.1 Term. This Agreement shall remain in effect for two (2) years from the Effective Date unless earlier terminated by either Party upon thirty (30) days written notice.
+
+7.2 Survival. The confidentiality and non-use obligations under this Agreement shall survive termination or expiration for a period of three (3) years.
+
+7.3 Trade Secrets. Notwithstanding Section 7.2, obligations regarding information that qualifies as a trade secret under applicable law shall continue for as long as such information remains a trade secret.
+
+8. EQUITABLE RELIEF
+
+8.1 Each Party acknowledges that unauthorized disclosure or use of Confidential Information may cause irreparable harm for which monetary damages would be inadequate.
+
+8.2 Accordingly, the Disclosing Party shall be entitled to seek injunctive or other equitable relief to prevent breach or threatened breach of this Agreement, without the necessity of posting bond or proving actual damages.
+
+9. NON-SOLICITATION
+
+9.1 During the term of this Agreement and for twelve (12) months thereafter, neither Party shall directly or indirectly solicit for employment any employee of the other Party with whom it had contact during the course of evaluating the potential business relationship.
+
+9.2 This restriction shall not apply to:
+
+    (a) general employment advertisements or job postings;
+
+    (b) employees who approach a Party without any solicitation;
+
+    (c) employees terminated by the other Party.
+
+10. GENERAL PROVISIONS
+
+10.1 Governing Law. This Agreement shall be governed by the laws of the State of Delaware, without regard to its conflict of laws principles.
+
+10.2 Jurisdiction. Each Party consents to the exclusive jurisdiction of the state and federal courts located in Delaware for any dispute arising under this Agreement.
+
+10.3 Assignment. Neither Party may assign this Agreement without the prior written consent of the other Party, except in connection with a merger, acquisition, or sale of substantially all assets.
+
+10.4 Entire Agreement. This Agreement constitutes the entire agreement between the Parties regarding its subject matter and supersedes all prior agreements, negotiations, and discussions.
+
+10.5 Amendment. This Agreement may only be modified by a written instrument signed by authorized representatives of both Parties.
+
+10.6 Waiver. The failure of either Party to enforce any provision of this Agreement shall not constitute a waiver of that provision or any other provision.
+
+10.7 Severability. If any provision of this Agreement is held invalid or unenforceable, the remaining provisions shall continue in full force and effect.
+
+10.8 Counterparts. This Agreement may be executed in counterparts, each of which shall be deemed an original and all of which together shall constitute one agreement.
+
+10.9 Notices. All notices under this Agreement shall be in writing and delivered to the addresses set forth below or to such other address as a Party may designate in writing.
+
+IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.
+
+ENTERPRISE DYNAMICS INC.                 CLOUDTECH SOLUTIONS LLC
+
+By: _________________________            By: _________________________
+Name: Richard Thompson                   Name: Sarah Mitchell
+Title: Chief Legal Officer               Title: General Counsel
+Date: January 10, 2025                   Date: January 10, 2025
+
+Address for Notices:                     Address for Notices:
+2000 Corporate Drive                     800 Technology Park
+Suite 500                                Suite 150
+Wilmington, DE 19801                     Reston, VA 20190
+Email: legal@enterprisedynamics.com      Email: legal@cloudtechsolutions.com

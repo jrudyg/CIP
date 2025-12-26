@@ -1,0 +1,53 @@
+{
+  "report_id": "activation_report_stage_1",
+  "stage_id": "stage_1",
+  "generated_at": "2025-12-08T15:49:23.685020",
+  "no_op": false,
+  "flags": {
+    "before": {
+      "flag_sae": false,
+      "flag_erce": false,
+      "flag_birl": false,
+      "flag_far": false
+    },
+    "after": {
+      "flag_sae": true,
+      "flag_erce": false,
+      "flag_birl": false,
+      "flag_far": false
+    },
+    "diff": {
+      "flag_sae": {
+        "was": false,
+        "now": true
+      }
+    }
+  },
+  "validation": {
+    "all_passed": true,
+    "tests_passed": 3,
+    "tests_failed": 0,
+    "tests_warning": 0,
+    "checks": [
+      {
+        "check_id": "sae_embeddings_path",
+        "status": "pass",
+        "details": "Embeddings path ready"
+      },
+      {
+        "check_id": "agent_role_cip_severity",
+        "status": "pass",
+        "details": "agent_role='cip-severity' found in 1 entries"
+      },
+      {
+        "check_id": "no_regression",
+        "status": "pass",
+        "details": "Baseline validation passed"
+      }
+    ]
+  },
+  "reversible": true,
+  "rollback_command": "python stage_runner.py rollback stage_1",
+  "previous_stage": "stage_0",
+  "next_stage": "stage_2"
+}

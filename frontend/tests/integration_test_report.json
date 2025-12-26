@@ -1,0 +1,199 @@
+{
+  "timestamp": "2025-12-09T19:30:05.488056",
+  "summary": {
+    "suites_total": 7,
+    "suites_passed": 7,
+    "tests_total": 30,
+    "tests_passed": 30,
+    "overall_status": "PASS"
+  },
+  "results": [
+    {
+      "suite": "API Response Shape Validation",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "valid_response",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "test": "error_response",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "test": "null_response",
+          "passed": true,
+          "errors": [
+            "API response is null or empty"
+          ]
+        },
+        {
+          "test": "malformed_response",
+          "passed": true,
+          "errors": [
+            "Missing required field: success",
+            "success=False but no error information provided"
+          ]
+        }
+      ]
+    },
+    {
+      "suite": "Data Binding",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "sae_extraction",
+          "passed": true,
+          "count": 2
+        },
+        {
+          "test": "erce_extraction",
+          "passed": true,
+          "count": 2
+        },
+        {
+          "test": "birl_extraction",
+          "passed": true,
+          "count": 1
+        },
+        {
+          "test": "far_extraction",
+          "passed": true,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "suite": "Engine Field Validation",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "sae_fields",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "test": "erce_fields",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "test": "birl_fields",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "test": "far_fields",
+          "passed": true,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "suite": "Empty Data Handling",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "empty_sae",
+          "passed": true
+        },
+        {
+          "test": "empty_erce",
+          "passed": true
+        },
+        {
+          "test": "empty_birl",
+          "passed": true
+        },
+        {
+          "test": "empty_far",
+          "passed": true
+        },
+        {
+          "test": "is_valid_empty",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "Error Response Handling",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "error_success_false",
+          "passed": true
+        },
+        {
+          "test": "error_category_captured",
+          "passed": true
+        },
+        {
+          "test": "error_no_crash",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "No Data Truncation",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "sae_no_truncation",
+          "passed": true,
+          "expected": 100,
+          "actual": 100
+        },
+        {
+          "test": "erce_no_truncation",
+          "passed": true,
+          "expected": 50,
+          "actual": 50
+        },
+        {
+          "test": "birl_no_truncation",
+          "passed": true,
+          "expected": 25,
+          "actual": 25
+        },
+        {
+          "test": "far_no_truncation",
+          "passed": true,
+          "expected": 15,
+          "actual": 15
+        }
+      ]
+    },
+    {
+      "suite": "Full Diagnostics",
+      "status": "PASSED",
+      "tests": [
+        {
+          "test": "diagnostics_overall",
+          "passed": true
+        },
+        {
+          "test": "diagnostics_shape",
+          "passed": true
+        },
+        {
+          "test": "diagnostics_sae",
+          "passed": true
+        },
+        {
+          "test": "diagnostics_erce",
+          "passed": true
+        },
+        {
+          "test": "diagnostics_birl",
+          "passed": true
+        },
+        {
+          "test": "diagnostics_far",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

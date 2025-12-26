@@ -1,0 +1,43 @@
+{
+  "report_id": "activation_report_stage_0",
+  "stage_id": "stage_0",
+  "generated_at": "2025-12-07T19:37:38.508745",
+  "no_op": true,
+  "flags": {
+    "before": {
+      "flag_sae": false,
+      "flag_erce": false,
+      "flag_birl": false,
+      "flag_far": false
+    },
+    "after": {
+      "flag_sae": false,
+      "flag_erce": false,
+      "flag_birl": false,
+      "flag_far": false
+    },
+    "diff": {}
+  },
+  "validation": {
+    "all_passed": true,
+    "tests_passed": 2,
+    "tests_failed": 0,
+    "tests_warning": 0,
+    "checks": [
+      {
+        "check_id": "registry_confirmed",
+        "status": "pass",
+        "details": "Registry accessible, flags: {'flag_sae': False, 'flag_erce': False, 'flag_birl': False, 'flag_far': False}"
+      },
+      {
+        "check_id": "defaults_verified",
+        "status": "pass",
+        "details": "All flags False: True, current: {'flag_sae': False, 'flag_erce': False, 'flag_birl': False, 'flag_far': False}"
+      }
+    ]
+  },
+  "reversible": true,
+  "rollback_command": "python stage_runner.py rollback stage_0",
+  "previous_stage": null,
+  "next_stage": "stage_1"
+}

@@ -55,6 +55,7 @@ except ImportError as e:
 
 # Setup comprehensive logging
 from logger_config import setup_logging, setup_api_logging, log_user_action
+from extraction_service import extract_contract_metadata, find_related_contracts, check_dependencies, extract_text_from_docx
 
 logger = setup_logging(__name__, LOG_LEVEL)
 api_logger = setup_api_logging()
@@ -159,7 +160,14 @@ def format_risk_assessment(assessment: RiskAssessment) -> Dict:
         'critical_items': [asdict(item) for item in assessment.critical_items],
         'important_items': [asdict(item) for item in assessment.important_items],
         'standard_items': [asdict(item) for item in assessment.standard_items],
-        'context': asdict(assessment.context)
+        'context': asdict(assessment.context),
+        # v1.6 additions
+        'risk_by_category': assessment.risk_by_category or {},
+        'clauses_reviewed': assessment.clauses_reviewed,
+        'clauses_flagged': assessment.clauses_flagged,
+        # v1.7 additions
+        'severity_counts': assessment.severity_counts or {},
+        'low_risk_clauses': assessment.low_risk_clauses or []
     }
 
 
@@ -1319,7 +1327,8 @@ def analyze_contract():
             file_path=file_path,
             context=context,
             save_to_db=bool(contract_id),
-            pattern_prompt=composed_prompt
+            pattern_prompt=composed_prompt,
+            contract_id=contract_id  # Pass existing ID to prevent duplicate INSERT
         )
 
         logger.info(f"Analysis complete - Risk: {assessment.overall_risk}")
@@ -1860,14 +1869,8 @@ def get_contract_details(contract_id: int):
 
         assessments = [dict(row) for row in cursor.fetchall()]
 
-        # Get negotiations
-        cursor.execute("""
-            SELECT * FROM negotiations
-            WHERE contract_id = ?
-            ORDER BY created_date DESC
-        """, (contract_id,))
-
-        negotiations = [dict(row) for row in cursor.fetchall()]
+        # Negotiations table removed in schema v2.0
+        negotiations = []
 
         conn.close()
 
@@ -2040,6 +2043,33 @@ def delete_contract(contract_id):
 
     except Exception as e:
         logger.error(f"Failed to delete contract: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/contracts/<int:contract_id>/stage', methods=['POST'])
+def update_contract_stage(contract_id):
+    """Update workflow stage for contract."""
+    data = request.get_json()
+    stage = data.get('workflow_stage')
+
+    if stage is None:
+        return jsonify({'error': 'workflow_stage required'}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE contracts SET workflow_stage = ? WHERE id = ?", (stage, contract_id))
+
+        # Auto-update status based on stage
+        if stage == 3:
+            cursor.execute("UPDATE contracts SET status = 'negotiation' WHERE id = ? AND status IN ('intake', 'review')", (contract_id,))
+
+        conn.commit()
+        conn.close()
+        logger.info(f"[WORKFLOW] Updated contract {contract_id} to stage {stage}")
+        return jsonify({'status': 'success', 'workflow_stage': stage}), 200
+    except Exception as e:
+        logger.error(f"[WORKFLOW] Stage update failed: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 
@@ -2989,6 +3019,60 @@ def export_redlines():
 
     except Exception as e:
         logger.error(f"[EXPORT] Request failed: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/redline/save', methods=['POST'])
+def save_redline():
+    """
+    Save redline review decisions.
+
+    JSON Body:
+        - contract_id: int
+        - decisions: list of {clause_index, decision, modified_text, note}
+        - overall_risk_before: str
+        - overall_risk_after: str (optional)
+    """
+    data = request.get_json()
+
+    if not data or 'contract_id' not in data:
+        return jsonify({'error': 'contract_id required'}), 400
+
+    contract_id = data['contract_id']
+    decisions = data.get('decisions', [])
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Save to redline_snapshots
+        cursor.execute("""
+            INSERT INTO redline_snapshots (
+                contract_id, base_version_contract_id, source_mode,
+                created_at, clauses_json, status,
+                overall_risk_before, overall_risk_after, dealbreakers_detected
+            ) VALUES (?, ?, 'manual', datetime('now'), ?, 'complete', ?, ?, ?)
+        """, (
+            contract_id,
+            data.get('base_version_contract_id', contract_id),  # Default to same contract
+            json.dumps(decisions),
+            data.get('overall_risk_before', ''),
+            data.get('overall_risk_after', ''),
+            data.get('dealbreakers_detected', 0)
+        ))
+
+        # Update workflow_stage = 2 (Reviewed)
+        cursor.execute("UPDATE contracts SET workflow_stage = 2 WHERE id = ?", (contract_id,))
+
+        conn.commit()
+        redline_id = cursor.lastrowid
+        conn.close()
+
+        logger.info(f"[REDLINE] Saved redline snapshot {redline_id} for contract {contract_id}")
+        return jsonify({'status': 'success', 'redline_id': redline_id}), 201
+
+    except Exception as e:
+        logger.error(f"[REDLINE] Save failed: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 
@@ -4196,10 +4280,10 @@ def get_report_tokens():
 @app.route('/api/compare-v3', methods=['POST'])
 def compare_v3_endpoint():
     """
-    Compare v3 Engine - Phase 4E Implementation
+    Compare v3 Engine - Phase 4F Implementation
 
-    Phase 4E: Infrastructure wiring only.
-    Returns deterministic placeholder data for SAE/ERCE/BIRL/FAR pipeline.
+    Phase 4F: Real intelligence with SAE/ERCE/BIRL/FAR pipeline.
+    Falls back to placeholders on failure.
 
     JSON Body:
         - v1_text: First contract version text (or v1_contract_id)
@@ -4208,7 +4292,7 @@ def compare_v3_endpoint():
     Returns:
         JSON with Compare v3 pipeline results
     """
-    logger.info("Compare v3 request received (Phase 4E)")
+    logger.info("Compare v3 request received (Phase 4F)")
 
     try:
         from compare_v3_engine import compare_v3_api
@@ -4226,7 +4310,7 @@ def compare_v3_endpoint():
         v1_text = data.get('v1_text', '')
         v2_text = data.get('v2_text', '')
 
-        # If contract IDs provided instead of text, fetch the text
+        # Get contract IDs for clause lookup
         v1_id = data.get('v1_contract_id')
         v2_id = data.get('v2_contract_id')
 
@@ -4247,8 +4331,8 @@ def compare_v3_endpoint():
                 'error_message_key': 'compare.payload_failure'
             }), 400
 
-        # Run Compare v3 pipeline
-        result = compare_v3_api(v1_text, v2_text)
+        # Run Compare v3 pipeline (Phase 4F: pass contract IDs for clause lookup)
+        result = compare_v3_api(v1_text, v2_text, v1_id, v2_id)
 
         if result.get('success'):
             logger.info("Compare v3 pipeline completed successfully")
@@ -4273,6 +4357,281 @@ def compare_v3_endpoint():
             'error': str(e),
             'error_message_key': 'compare.internal_failure'
         }), 500
+
+
+# ============================================================================
+# INTELLIGENT INTAKE ENDPOINTS
+# ============================================================================
+
+@app.route('/api/intake/upload', methods=['POST'])
+def intake_upload():
+    """
+    Upload a contract file for intelligent intake.
+
+    Accepts: .docx files only
+    Returns: {file_id, filename, status}
+    """
+    logger.info("[INTAKE] Upload request received")
+
+    try:
+        # Validate file present
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+
+        if not file.filename:
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Validate file type (.docx only for now)
+        if not file.filename.lower().endswith('.docx'):
+            return jsonify({
+                'error': 'Unsupported file type',
+                'details': 'Only .docx files are currently supported',
+                'filename': file.filename
+            }), 400
+
+        # Save file
+        file_path = save_uploaded_file(file)
+
+        # Generate a simple file_id (timestamp-based)
+        import hashlib
+        file_id = hashlib.md5(str(file_path).encode()).hexdigest()[:12]
+
+        logger.info(f"[INTAKE] File uploaded: {file_path} (ID: {file_id})")
+
+        return jsonify({
+            'status': 'success',
+            'file_id': file_id,
+            'filename': file.filename,
+            'file_path': str(file_path)
+        }), 200
+
+    except Exception as e:
+        logger.error(f"[INTAKE] Upload failed: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/intake/extract', methods=['POST'])
+def intake_extract():
+    """
+    Extract metadata from uploaded contract.
+
+    Body: {file_path: string}
+    Returns: {extraction: {...}, related_contracts: [...]}
+    """
+    logger.info("[INTAKE] Extract request received")
+
+    try:
+        # Check dependencies
+        deps = check_dependencies()
+        if not deps.get('python-docx'):
+            return jsonify({
+                'error': 'python-docx not installed',
+                'action': 'Run: pip install python-docx'
+            }), 503
+
+        if not deps.get('api_key_configured'):
+            return jsonify({
+                'error': 'ANTHROPIC_API_KEY not configured',
+                'action': 'Set ANTHROPIC_API_KEY in .env file'
+            }), 503
+
+        # Get file path from request
+        data = request.get_json()
+        if not data or 'file_path' not in data:
+            return jsonify({'error': 'file_path required'}), 400
+
+        file_path = Path(data['file_path'])
+
+        if not file_path.exists():
+            return jsonify({'error': f'File not found: {file_path}'}), 404
+
+        # Run extraction
+        logger.info(f"[INTAKE] Extracting metadata from: {file_path}")
+        result = extract_contract_metadata(file_path)
+
+        # Find related contracts if we have party names
+        related = []
+        if result.success and result.parties:
+            related = find_related_contracts(result.parties)
+            logger.info(f"[INTAKE] Found {len(related)} related contracts")
+
+        return jsonify({
+            'status': 'success' if result.success else 'partial',
+            'extraction': result.to_dict(),
+            'related_contracts': related
+        }), 200
+
+    except ImportError as e:
+        logger.error(f"[INTAKE] Import error: {e}")
+        return jsonify({
+            'error': 'Extraction service not available',
+            'details': str(e)
+        }), 503
+
+    except Exception as e:
+        logger.error(f"[INTAKE] Extract failed: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/intake/store', methods=['POST'])
+def intake_store():
+    """
+    Store confirmed contract metadata in database.
+
+    Body: {
+        file_path: string,
+        title: string,
+        contract_type: string,
+        purpose: string,
+        party: string,
+        counterparty: string,
+        orientation: string,
+        leverage: string,
+        related_contract_id: int|null,
+        full_text: string (optional)
+    }
+
+    Returns: {contract_id: int, suggested_next: string}
+    """
+    logger.info("[INTAKE] Store request received")
+
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Required fields
+        required = ['file_path', 'title', 'contract_type', 'party', 'counterparty', 'orientation']
+        missing = [f for f in required if not data.get(f)]
+
+        if missing:
+            return jsonify({
+                'error': 'Missing required fields',
+                'missing': missing
+            }), 400
+
+        # Extract filename from path
+        file_path = Path(data['file_path'])
+        filename = file_path.name
+
+        # Get full text if not provided
+        full_text = data.get('full_text', '')
+        if not full_text and file_path.exists():
+            try:
+                full_text, _ = extract_text_from_docx(file_path)
+            except:
+                pass
+
+        # Store in database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Column names matched to actual schema (verified 12/15/25)
+        cursor.execute("""
+            INSERT INTO contracts (
+                filename, filepath, title, contract_type, contract_purpose,
+                our_entity, counterparty, party_relationship, leverage,
+                parent_id, status, parsed_metadata, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        """, (
+            filename,
+            str(file_path),
+            data['title'],
+            data['contract_type'],
+            data.get('purpose'),
+            data['party'],           # Maps to 'our_entity' column
+            data['counterparty'],
+            data['orientation'],     # Maps to 'party_relationship' (CUSTOMER/VENDOR)
+            data.get('leverage'),
+            data.get('related_contract_id'),  # Maps to 'parent_id'
+            'intake',                # Initial status per schema default
+            full_text[:50000] if full_text else None  # Store in parsed_metadata
+        ))
+
+        contract_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        logger.info(f"[INTAKE] Contract stored: ID={contract_id}, Title={data['title']}")
+
+        # Determine suggested next step
+        suggested_next = "Risk Analysis"
+        if data['contract_type'] == 'Amendment':
+            suggested_next = "Compare Versions"
+
+        return jsonify({
+            'status': 'success',
+            'contract_id': contract_id,
+            'suggested_next': suggested_next
+        }), 201
+
+    except sqlite3.IntegrityError as e:
+        logger.error(f"[INTAKE] Database integrity error: {e}")
+        return jsonify({'error': 'Database constraint violation', 'details': str(e)}), 409
+
+    except Exception as e:
+        logger.error(f"[INTAKE] Store failed: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/intake/status', methods=['GET'])
+def intake_status():
+    """
+    Check intake service status and dependencies.
+
+    Returns: {ready: bool, dependencies: {...}}
+    """
+    try:
+        deps = check_dependencies()
+
+        ready = all(deps.values())
+
+        return jsonify({
+            'ready': ready,
+            'dependencies': deps
+        }), 200 if ready else 503
+
+    except ImportError:
+        return jsonify({
+            'ready': False,
+            'error': 'extraction_service not found'
+        }), 503
+
+
+# ============================================================================
+# REGISTER BLUEPRINTS
+# ============================================================================
+
+try:
+    from diagnostics_api import register_diagnostics
+    register_diagnostics(app)
+    logger.info("Diagnostics API endpoints registered")
+except ImportError as e:
+    logger.warning(f"Diagnostics API not available: {e}")
+
+try:
+    from dashboard_api import register_dashboard
+    register_dashboard(app)
+    logger.info("Dashboard API endpoints registered")
+except ImportError as e:
+    logger.warning(f"Dashboard API not available: {e}")
+
+try:
+    from export_api import register_export
+    register_export(app)
+    logger.info("Export API endpoints registered")
+except ImportError as e:
+    logger.warning(f"Export API not available: {e}")
+
+try:
+    from health_api import register_health
+    register_health(app)
+    logger.info("Health Score API endpoints registered")
+except ImportError as e:
+    logger.warning(f"Health Score API not available: {e}")
 
 
 # ============================================================================

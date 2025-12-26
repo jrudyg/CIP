@@ -1,0 +1,62 @@
+{
+  "report_type": "engine_flag_alignment",
+  "generated_at": "2025-12-08T15:40:02.866847",
+  "status": "COMPLETE",
+  "patch_version": "4F-align-001",
+  "rollback_tag": "pre-alignment-4f",
+  "changes": [
+    {
+      "file": "backend/flag_registry.py",
+      "change": "CONFIG_PATH updated",
+      "before": "os.path.join(__file__, \"..\", \"..\", \"config\", \"settings.json\")",
+      "after": "os.path.join(__file__, \"..\", \"data\", \"settings.json\")",
+      "reason": "Point to correct settings.json location in CIP/data/"
+    },
+    {
+      "file": "backend/phase5_flags.py",
+      "change": "Added FlagState bridge",
+      "additions": [
+        "Import get_flag_state from flag_registry",
+        "FLAG_NAME_MAP constant for name translation",
+        "_FLAG_REGISTRY_AVAILABLE availability check"
+      ],
+      "modified_functions": [
+        "is_flag_enabled() - now reads intelligence flags from FlagState",
+        "get_all_flags() - returns live values for intelligence flags",
+        "get_phase5_status() - includes flag_registry_available status"
+      ],
+      "reason": "Bridge phase5_flags to FlagState canonical source"
+    }
+  ],
+  "flag_mapping": {
+    "sae_intelligence_active": "flag_sae",
+    "erce_intelligence_active": "flag_erce",
+    "birl_intelligence_active": "flag_birl",
+    "far_intelligence_active": "flag_far"
+  },
+  "data_flow": {
+    "before": "stage_runner -> flag_registry -> settings.json (DISCONNECTED from) compare_v3_engine -> phase5_flags (hard-coded)",
+    "after": "stage_runner -> flag_registry -> settings.json <- phase5_flags <- compare_v3_engine"
+  },
+  "verification": {
+    "test_status": "PASSED",
+    "tests_run": [
+      "Import verification",
+      "Initial flag state check",
+      "Flag alignment before activation",
+      "Flag activation test (flag_sae=True)",
+      "Reset test"
+    ],
+    "alignment_confirmed": true
+  },
+  "frozen_surfaces": {
+    "TRUST": "NOT_MODIFIED",
+    "GEM": "NOT_MODIFIED",
+    "Z7": "NOT_MODIFIED"
+  },
+  "rollback_instructions": [
+    "Revert phase5_flags.py: Remove FLAG_NAME_MAP, _FLAG_REGISTRY_AVAILABLE, flag_registry import",
+    "Revert is_flag_enabled() to: return PHASE_5_FLAGS.get(flag_name, False)",
+    "Revert flag_registry.py CONFIG_PATH to: \"..\", \"..\", \"config\""
+  ]
+}

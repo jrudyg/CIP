@@ -1,0 +1,202 @@
+# CIP - Contract Intelligence Platform
+# Git Ignore File
+
+# ============================================================================
+# ENVIRONMENT & SECRETS
+# ============================================================================
+
+# Environment variables (CONTAINS API KEYS - NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+
+# API Keys
+*.key
+*.pem
+credentials.json
+
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+
+# ============================================================================
+# DATA & DATABASES
+# ============================================================================
+
+# SQLite databases (comment out if you want to track them)
+# *.db
+# *.sqlite
+# *.sqlite3
+
+# Uploaded contracts (SENSITIVE - DO NOT COMMIT)
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Vector stores
+data/vector_stores/*
+!data/vector_stores/.gitkeep
+
+# Cache
+data/cache/*
+!data/cache/.gitkeep
+
+# Reports
+data/reports/*
+!data/reports/.gitkeep
+
+
+# ============================================================================
+# LOGS
+# ============================================================================
+
+# Log files
+logs/
+*.log
+*.log.*
+log/
+
+
+# ============================================================================
+# IDE & EDITORS
+# ============================================================================
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+
+# ============================================================================
+# OPERATING SYSTEM
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+
+# ============================================================================
+# STREAMLIT
+# ============================================================================
+
+.streamlit/secrets.toml
+
+
+# ============================================================================
+# TEMPORARY FILES
+# ============================================================================
+
+# Temp files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*_backup_*.db
+backups/
+
+
+# ============================================================================
+# PROJECT SPECIFIC
+# ============================================================================
+
+# Test outputs
+test-output/
+test_output/
+outputs/
+
+# Local config overrides
+config.local.py
+settings.local.json
+
+# Large files (if any)
+*.pdf
+*.docx
+*.doc
+
+# Development notes (if sensitive)
+NOTES.md
+TODO.private.md

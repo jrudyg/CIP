@@ -1,0 +1,58 @@
+{
+  "report_id": "activation_report_stage_4",
+  "stage_id": "stage_4",
+  "generated_at": "2025-12-09T18:01:01.477312",
+  "no_op": false,
+  "flags": {
+    "before": {
+      "flag_sae": true,
+      "flag_erce": true,
+      "flag_birl": true,
+      "flag_far": false
+    },
+    "after": {
+      "flag_sae": true,
+      "flag_erce": true,
+      "flag_birl": true,
+      "flag_far": true
+    },
+    "diff": {
+      "flag_far": {
+        "was": false,
+        "now": true
+      }
+    }
+  },
+  "validation": {
+    "all_passed": true,
+    "tests_passed": 4,
+    "tests_failed": 0,
+    "tests_warning": 0,
+    "checks": [
+      {
+        "check_id": "far_flowdown",
+        "status": "pass",
+        "details": "Flowdown rules deterministic"
+      },
+      {
+        "check_id": "agent_role_far",
+        "status": "pass",
+        "details": "agent_role='far' found in 17 entries"
+      },
+      {
+        "check_id": "api_shape_frozen",
+        "status": "pass",
+        "details": "API shape matches frozen spec (CompareV3Result)"
+      },
+      {
+        "check_id": "full_pipeline",
+        "status": "pass",
+        "details": "Full pipeline execution verified"
+      }
+    ]
+  },
+  "reversible": true,
+  "rollback_command": "python stage_runner.py rollback stage_4",
+  "previous_stage": "stage_3",
+  "next_stage": null
+}

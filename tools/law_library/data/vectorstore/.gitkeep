@@ -1,0 +1,2 @@
+# This directory will contain ChromaDB vector database files
+# It will be automatically created and populated during ingestion

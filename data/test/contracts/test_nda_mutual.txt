@@ -1,0 +1,126 @@
+MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of February 1, 2025 ("Effective Date") by and between:
+
+INNOVATECH SOLUTIONS, INC., a Delaware corporation ("Party A")
+
+and
+
+DATAFLOW PARTNERS LLC, a California limited liability company ("Party B")
+
+(each a "Party" and collectively the "Parties")
+
+RECITALS
+
+The Parties wish to explore a potential business relationship and, in connection therewith, may disclose to each other certain confidential and proprietary information.
+
+NOW, THEREFORE, in consideration of the mutual covenants set forth herein, the Parties agree as follows:
+
+1. DEFINITION OF CONFIDENTIAL INFORMATION
+
+1.1 "Confidential Information" means any non-public technical, business, or financial information disclosed by one Party ("Disclosing Party") to the other Party ("Receiving Party"), whether disclosed orally, in writing, or by inspection of tangible objects, that:
+    (a) is marked or designated as "confidential" or "proprietary"; or
+    (b) a reasonable person would understand to be confidential given the nature of the information and circumstances of disclosure.
+
+1.2 Confidential Information includes, without limitation:
+    - Trade secrets, inventions, and know-how
+    - Business plans and strategies
+    - Customer and supplier lists
+    - Financial data and projections
+    - Technical specifications and designs
+    - Software, source code, and algorithms
+
+1.3 Confidential Information does not include information that:
+    (a) is or becomes publicly available without breach of this Agreement;
+    (b) was rightfully in the Receiving Party's possession before disclosure;
+    (c) is rightfully received from a third party without restriction;
+    (d) is independently developed without use of the Disclosing Party's Confidential Information.
+
+2. OBLIGATIONS OF RECEIVING PARTY
+
+2.1 Protection. The Receiving Party shall:
+    (a) hold all Confidential Information in strict confidence;
+    (b) not disclose Confidential Information to any third party without prior written consent;
+    (c) use Confidential Information solely for the Purpose defined herein;
+    (d) protect Confidential Information using the same degree of care used to protect its own confidential information, but no less than reasonable care.
+
+2.2 Permitted Disclosures. The Receiving Party may disclose Confidential Information to its employees, contractors, and advisors who:
+    (a) have a need to know for the Purpose;
+    (b) are bound by confidentiality obligations at least as protective as this Agreement.
+
+2.3 Compelled Disclosure. If legally compelled to disclose Confidential Information, the Receiving Party shall:
+    (a) provide prompt written notice to the Disclosing Party (if legally permitted);
+    (b) cooperate with the Disclosing Party's efforts to obtain protective treatment;
+    (c) disclose only the minimum information legally required.
+
+3. PURPOSE
+
+3.1 The Parties are disclosing Confidential Information solely for the purpose of evaluating and potentially engaging in a business relationship related to technology integration services ("Purpose").
+
+3.2 Neither Party shall use the other Party's Confidential Information for any purpose other than the Purpose without prior written consent.
+
+4. TERM AND TERMINATION
+
+4.1 Term. This Agreement shall remain in effect for two (2) years from the Effective Date.
+
+4.2 Survival. The obligations of confidentiality and non-use shall survive termination or expiration for a period of three (3) years.
+
+4.3 Return or Destruction. Upon termination, written request, or conclusion of discussions:
+    (a) Each Party shall promptly return or destroy all Confidential Information received from the other Party;
+    (b) Upon request, the Receiving Party shall certify in writing that all Confidential Information has been returned or destroyed;
+    (c) The Receiving Party may retain one archival copy for legal compliance purposes.
+
+5. NO LICENSE OR WARRANTY
+
+5.1 No License. Nothing in this Agreement grants any license to use, sell, or exploit any Confidential Information or intellectual property rights.
+
+5.2 No Warranty. ALL CONFIDENTIAL INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. THE DISCLOSING PARTY MAKES NO WARRANTIES REGARDING THE ACCURACY, COMPLETENESS, OR FITNESS FOR A PARTICULAR PURPOSE.
+
+6. NO OBLIGATION
+
+6.1 Nothing in this Agreement obligates either Party to:
+    (a) disclose any particular Confidential Information;
+    (b) enter into any business relationship;
+    (c) purchase or sell any products or services.
+
+7. NON-SOLICITATION
+
+7.1 Mutual Non-Solicit. During the term and for twelve (12) months thereafter, neither Party shall directly solicit for employment any employee of the other Party with whom it had contact in connection with this Agreement.
+
+7.2 Carve-Out. This restriction does not apply to:
+    (a) general advertisements or job postings not targeted at the other Party's employees;
+    (b) employees who independently approach a Party without solicitation.
+
+8. GENERAL PROVISIONS
+
+8.1 Governing Law. This Agreement shall be governed by the laws of the State of Delaware, without regard to conflict of laws principles.
+
+8.2 Jurisdiction. Any dispute arising under this Agreement shall be subject to the exclusive jurisdiction of the state and federal courts located in Delaware.
+
+8.3 Injunctive Relief. Each Party acknowledges that breach of this Agreement may cause irreparable harm for which monetary damages would be inadequate, and agrees that the non-breaching Party shall be entitled to seek injunctive relief without bond.
+
+8.4 Assignment. Neither Party may assign this Agreement without prior written consent. Any assignment in violation of this provision shall be void.
+
+8.5 Entire Agreement. This Agreement constitutes the entire agreement between the Parties regarding its subject matter and supersedes all prior agreements and understandings.
+
+8.6 Amendments. This Agreement may only be modified by a written instrument signed by both Parties.
+
+8.7 Severability. If any provision is held invalid, the remaining provisions shall remain in full force and effect.
+
+8.8 Counterparts. This Agreement may be executed in counterparts, each of which shall be deemed an original.
+
+8.9 Notices. All notices shall be in writing and delivered to the addresses set forth in the signature blocks below.
+
+IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.
+
+INNOVATECH SOLUTIONS, INC.                DATAFLOW PARTNERS LLC
+
+By: _________________________             By: _________________________
+Name: Amanda Williams                     Name: Robert Martinez
+Title: General Counsel                    Title: Chief Operating Officer
+Date: February 1, 2025                    Date: February 1, 2025
+
+Address for Notices:                      Address for Notices:
+100 Innovation Boulevard                  500 Data Center Road
+Suite 400                                 Suite 200
+Austin, TX 78701                          Portland, OR 97201

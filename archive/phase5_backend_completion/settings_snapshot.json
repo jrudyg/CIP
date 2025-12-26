@@ -1,0 +1,125 @@
+{
+  "llm": {
+    "default_model": "claude-sonnet-4.5",
+    "budget_limit_monthly": 100.0,
+    "temperature": 1.0
+  },
+  "agents": {
+    "parallel_execution": true,
+    "timeout_seconds": 300
+  },
+  "reports": {
+    "output_directory": "../P007-document-intelligence/output",
+    "auto_open": true
+  },
+  "database": {
+    "path": "../09-market-intelligence/data/competitors.db",
+    "backup_enabled": true
+  },
+  "ui": {
+    "theme": "light",
+    "results_per_page": 20
+  },
+  "compare_v3": {
+    "flags": {
+      "flag_sae": true,
+      "flag_erce": true,
+      "flag_birl": true,
+      "flag_far": true
+    },
+    "version": "4F",
+    "last_stage_activated": "stage_4",
+    "activation_history": [
+      {
+        "stage_id": "alignment_test",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": false,
+          "flag_birl": false,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T15:39:35.545943"
+      },
+      {
+        "stage_id": "alignment_reset",
+        "flags": {
+          "flag_sae": false,
+          "flag_erce": false,
+          "flag_birl": false,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T15:39:35.554912"
+      },
+      {
+        "stage_id": "stage_1",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": false,
+          "flag_birl": false,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T15:48:21.064719"
+      },
+      {
+        "stage_id": "rollback_stage_1",
+        "flags": {
+          "flag_sae": false,
+          "flag_erce": false,
+          "flag_birl": false,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T15:49:10.527620"
+      },
+      {
+        "stage_id": "stage_1",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": false,
+          "flag_birl": false,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T15:49:23.661032"
+      },
+      {
+        "stage_id": "stage_2",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": true,
+          "flag_birl": false,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T19:42:31.380618"
+      },
+      {
+        "stage_id": "stage_3",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": true,
+          "flag_birl": true,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-08T22:01:12.994256"
+      },
+      {
+        "stage_id": "stage_3",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": true,
+          "flag_birl": true,
+          "flag_far": false
+        },
+        "activated_at": "2025-12-09T17:53:22.430443"
+      },
+      {
+        "stage_id": "stage_4",
+        "flags": {
+          "flag_sae": true,
+          "flag_erce": true,
+          "flag_birl": true,
+          "flag_far": true
+        },
+        "activated_at": "2025-12-09T18:01:01.467669"
+      }
+    ]
+  }
+}

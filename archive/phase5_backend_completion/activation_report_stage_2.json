@@ -1,0 +1,53 @@
+{
+  "report_id": "activation_report_stage_2",
+  "stage_id": "stage_2",
+  "generated_at": "2025-12-08T19:42:31.391418",
+  "no_op": false,
+  "flags": {
+    "before": {
+      "flag_sae": true,
+      "flag_erce": false,
+      "flag_birl": false,
+      "flag_far": false
+    },
+    "after": {
+      "flag_sae": true,
+      "flag_erce": true,
+      "flag_birl": false,
+      "flag_far": false
+    },
+    "diff": {
+      "flag_erce": {
+        "was": false,
+        "now": true
+      }
+    }
+  },
+  "validation": {
+    "all_passed": true,
+    "tests_passed": 3,
+    "tests_failed": 0,
+    "tests_warning": 0,
+    "checks": [
+      {
+        "check_id": "erce_pattern_engine",
+        "status": "pass",
+        "details": "Pattern engine functional"
+      },
+      {
+        "check_id": "joint_logging",
+        "status": "pass",
+        "details": "Joint SAE+ERCE logs verified"
+      },
+      {
+        "check_id": "no_regression",
+        "status": "pass",
+        "details": "Baseline validation passed"
+      }
+    ]
+  },
+  "reversible": true,
+  "rollback_command": "python stage_runner.py rollback stage_2",
+  "previous_stage": "stage_1",
+  "next_stage": "stage_3"
+}

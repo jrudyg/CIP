@@ -1,0 +1,100 @@
+{
+  "component": "BIRL Narrative Pane",
+  "phase": "Phase 5 UX Upgrade - Task 3",
+  "status": "IMPLEMENTED",
+  "tests_passed": 10,
+  "tests_failed": 0,
+  "features": [
+    "Collapsible context pane (default collapsed)",
+    "Session state management for expand/collapse",
+    "Scrollable narrative container (max 500px height)",
+    "Impact dimension badges with color coding",
+    "Token count tracking and display",
+    "Summary statistics bar",
+    "Individual narrative cards with clean formatting",
+    "Empty state display",
+    "Compact display mode option",
+    "Expander integration helper",
+    "Print-friendly CSS styles"
+  ],
+  "css_classes_implemented": [
+    "birl-context-pane (main container)",
+    "birl-pane-header (clickable header)",
+    "birl-pane-content (collapsible body)",
+    "birl-narrative-scroll (scrollable container)",
+    "birl-narrative-card (individual card)",
+    "birl-narrative-text (narrative text block)",
+    "birl-dimension-badge (dimension tag)",
+    "birl-dim-* (dimension-specific colors)",
+    "birl-summary-bar (statistics footer)",
+    "birl-empty-state (empty placeholder)",
+    "birl-compact (compact mode modifier)"
+  ],
+  "impact_dimensions": {
+    "MARGIN": {
+      "icon": "\ud83d\udcb0",
+      "color": "#059669",
+      "description": "Profit margins and pricing impact"
+    },
+    "RISK": {
+      "icon": "\u26a0\ufe0f",
+      "color": "#DC2626",
+      "description": "Risk profile or liability changes"
+    },
+    "COMPLIANCE": {
+      "icon": "\ud83d\udccb",
+      "color": "#7C3AED",
+      "description": "Regulatory implications"
+    },
+    "SCHEDULE": {
+      "icon": "\ud83d\udcc5",
+      "color": "#2563EB",
+      "description": "Timeline or delivery impact"
+    },
+    "QUALITY": {
+      "icon": "\u2705",
+      "color": "#0891B2",
+      "description": "Quality standards changes"
+    },
+    "CASH_FLOW": {
+      "icon": "\ud83d\udcb5",
+      "color": "#CA8A04",
+      "description": "Payment terms impact"
+    },
+    "ADMIN": {
+      "icon": "\ud83d\udcdd",
+      "color": "#6B7280",
+      "description": "Administrative changes"
+    }
+  },
+  "state_management": {
+    "state_key_pattern": "_birl_pane_expanded_{pane_id}",
+    "default_state": "collapsed",
+    "persistence": "st.session_state",
+    "functions": [
+      "init_birl_pane_state()",
+      "is_birl_pane_expanded()",
+      "toggle_birl_pane()",
+      "set_birl_pane_state()"
+    ]
+  },
+  "integration_points": [
+    "Compare Versions page (below z4 output)",
+    "Compare v3 result display",
+    "BIRL expander section",
+    "Contract analysis views",
+    "Standalone narrative displays"
+  ],
+  "file_location": "frontend/components/birl_narrative.py",
+  "demo_page": "frontend/pages/11_\ud83d\udcd6_BIRL_Narrative_Demo.py",
+  "data_structure": {
+    "input_format": {
+      "clause_pair_id": "int",
+      "narrative": "str",
+      "impact_dimensions": "List[str]",
+      "token_count": "int"
+    },
+    "extraction_function": "extract_birl_data_from_v3_result()",
+    "stats_function": "get_birl_summary_stats()"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "component": "FAR Action Bar",
+  "phase": "Phase 5 UX Upgrade - Task 4",
+  "status": "IMPLEMENTED",
+  "tests_passed": 14,
+  "tests_failed": 0,
+  "features": [
+    "Fixed bottom viewport positioning (z-index 9999)",
+    "High-contrast, non-dismissible styling",
+    "Animated gradient indicator bar",
+    "Severity-coded summary badges (CRITICAL/HIGH/MODERATE)",
+    "Expandable details panel with gap cards",
+    "5 action buttons (Resolve, Escalate, Defer, Negotiate, Export)",
+    "Gap cards with recommendations",
+    "Session state persistence for details panel",
+    "Inline summary view option",
+    "Expander integration helper",
+    "Print-friendly CSS styles",
+    "High contrast mode toggle",
+    "Action callback support"
+  ],
+  "css_classes_implemented": [
+    "far-action-bar (fixed container)",
+    "far-bar-header (title section)",
+    "far-summary-badges (severity counts)",
+    "far-summary-badge.* (severity-specific)",
+    "far-action-btn.* (button variants)",
+    "far-details-panel (expandable)",
+    "far-gap-card.* (severity cards)",
+    "far-persistent-badge (action required)",
+    "far-action-bar-spacer (content offset)",
+    "far-high-contrast (accessibility mode)",
+    "far-action-bar-inline (non-fixed variant)"
+  ],
+  "severity_levels": {
+    "CRITICAL": {
+      "icon": "\ud83d\udd34",
+      "color": "#DC2626",
+      "description": "Requires immediate resolution"
+    },
+    "HIGH": {
+      "icon": "\ud83d\udfe0",
+      "color": "#D97706",
+      "description": "Should be addressed before execution"
+    },
+    "MODERATE": {
+      "icon": "\ud83d\udfe1",
+      "color": "#2563EB",
+      "description": "Monitor and review"
+    }
+  },
+  "action_types": {
+    "RESOLVE": {
+      "icon": "\u2705",
+      "color": "#10B981"
+    },
+    "ESCALATE": {
+      "icon": "\u2b06\ufe0f",
+      "color": "#F59E0B"
+    },
+    "DEFER": {
+      "icon": "\u23f3",
+      "color": "#6B7280"
+    },
+    "NEGOTIATE": {
+      "icon": "\ud83e\udd1d",
+      "color": "#3B82F6"
+    },
+    "EXPORT": {
+      "icon": "\ud83d\udce4",
+      "color": "#8B5CF6"
+    }
+  },
+  "positioning": {
+    "type": "fixed",
+    "location": "bottom viewport",
+    "z_index": 9999,
+    "spacer_height": "140px"
+  },
+  "state_management": {
+    "state_key_pattern": "_far_details_expanded_{bar_id}",
+    "default_state": "collapsed",
+    "persistence": "st.session_state"
+  },
+  "integration_points": [
+    "Compare Versions page (when FAR gaps detected)",
+    "Contract analysis completion",
+    "Flowdown compliance reviews",
+    "Subcontract generation workflows",
+    "Risk assessment dashboards"
+  ],
+  "file_location": "frontend/components/far_action_bar.py",
+  "demo_page": "frontend/pages/12_\ud83d\udccb_FAR_Action_Bar_Demo.py",
+  "data_structure": {
+    "input_format": {
+      "gap_type": "str",
+      "severity": "str (CRITICAL|HIGH|MODERATE)",
+      "upstream_value": "str",
+      "downstream_value": "str",
+      "recommendation": "str"
+    },
+    "extraction_function": "extract_far_data_from_v3_result()",
+    "stats_function": "get_far_summary_stats()",
+    "visibility_function": "should_show_action_bar()"
+  }
+}

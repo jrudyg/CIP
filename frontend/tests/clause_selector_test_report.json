@@ -1,0 +1,109 @@
+{
+  "task": "P6.C2.T2",
+  "component": "Clause Selector (Enhanced)",
+  "phase": "Phase 6 UI Upgrade",
+  "status": "IMPLEMENTED",
+  "tests_passed": 28,
+  "tests_failed": 0,
+  "deliverables": {
+    "component": "frontend/components/clause_selector.py",
+    "demo_page": "frontend/pages/21_\ud83d\udccb_ClauseSelector_Demo.py",
+    "test_suite": "frontend/tests/test_clause_selector.py"
+  },
+  "enhancements": {
+    "selection_tabs": [
+      "SelectionTabConfig dataclass",
+      "DEFAULT_SELECTION_TABS (All/Changed/Critical/High)",
+      "render_selection_tabs() component",
+      "Tab badge counts",
+      "Active tab persistence"
+    ],
+    "multi_state_styling": [
+      "Default state",
+      "Hover state",
+      "Focus state (from a11y_utils)",
+      "Selected state",
+      "Selected + Focus state",
+      "Has Changes state",
+      "Disabled state"
+    ],
+    "a11y_improvements": [
+      "Focus CSS from a11y_utils.generate_focus_css()",
+      "ARIA attrs via a11y_utils.get_aria_attrs()",
+      "Role validation via validate_aria_role()",
+      "Focus validation via validate_focus_visible()"
+    ],
+    "aria_semantics": [
+      "role='tablist' on selection tabs",
+      "role='tab' with aria-selected",
+      "role='option' on clause items",
+      "aria-pressed on link toggle",
+      "aria-live region for selection updates"
+    ],
+    "topnav_integration": [
+      "sync_with_topnav() function",
+      "is_topnav_compare_mode() helper",
+      "topnav_sync in binder output"
+    ]
+  },
+  "features": {
+    "state_management": [
+      "Persistent V1 clause ID state",
+      "Persistent V2 clause ID state",
+      "Linked/independent selection modes",
+      "Filter tab state persistence",
+      "Session state persistence across reruns",
+      "Programmatic selection API",
+      "Clear selection functionality"
+    ],
+    "ui_components": [
+      "Selection filter tabs (All/Changed/Critical/High)",
+      "Full clause selector with columns",
+      "Minimal dropdown variant",
+      "Severity indicators (CRITICAL/HIGH/MODERATE/ADMIN)",
+      "Change markers for modified clauses",
+      "Selection display panel",
+      "Link toggle button"
+    ],
+    "accessibility": [
+      "tabindex for keyboard navigation",
+      "ARIA role='option' on items",
+      "ARIA role='tab' on filter tabs",
+      "aria-selected state tracking",
+      "aria-pressed on toggle",
+      "aria-live region",
+      ":focus and :focus-visible styling",
+      "High contrast mode support"
+    ]
+  },
+  "wcag_compliance": {
+    "level": "AA",
+    "keyboard_navigable": true,
+    "focus_indicators": true,
+    "color_contrast": "Passes AA (AAA in high-contrast)",
+    "aria_support": "Full ARIA semantics"
+  },
+  "state_api": {
+    "get_clause_selection()": "Returns ClauseSelection",
+    "set_v1_clause(id)": "Sets V1, respects linked mode",
+    "set_v2_clause(id)": "Sets V2, respects linked mode",
+    "set_clause_pair(v1, v2)": "Sets both directly",
+    "clear_clause_selection()": "Resets selection",
+    "is_linked_mode()": "Returns link status",
+    "toggle_linked_mode()": "Toggles link/independent",
+    "get_filter_tab()": "Returns current filter tab",
+    "set_filter_tab(id)": "Sets filter tab",
+    "get_selection_for_binder()": "CC3 integration format",
+    "sync_with_topnav()": "TopNav state sync"
+  },
+  "cc3_integration": {
+    "binder_format": {
+      "v1_clause_id": "Optional[int]",
+      "v2_clause_id": "Optional[int]",
+      "is_linked": "bool",
+      "has_selection": "bool",
+      "filter_tab": "str",
+      "topnav_sync": "Optional[str]"
+    }
+  }
+}

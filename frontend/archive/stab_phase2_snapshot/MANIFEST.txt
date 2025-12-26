@@ -1,0 +1,15 @@
+# STAB Phase 2 Snapshot Archive Manifest
+# Created: 2025-12-02 11:07:11
+# Purpose: Pre-Phase 3 refactor archive of CIP page files
+# Operation: Copy-only (originals preserved)
+
+2025-12-02 11:07:11 pages/2_📊_Contracts_Portfolio.py -> archive/stab_phase2_snapshot/2_📊_Contracts_Portfolio.py
+2025-12-02 11:07:11 pages/3_🧠_Intelligent_Intake.py -> archive/stab_phase2_snapshot/3_🧠_Intelligent_Intake.py
+2025-12-02 11:07:11 pages/4_🔍_Risk_Analysis.py -> archive/stab_phase2_snapshot/4_🔍_Risk_Analysis.py
+2025-12-02 11:07:11 pages/5_📝_Redline_Reviews.py -> archive/stab_phase2_snapshot/5_📝_Redline_Reviews.py
+2025-12-02 11:07:11 pages/6_⚖️_Compare_Versions.py -> archive/stab_phase2_snapshot/6_⚖️_Compare_Versions.py
+2025-12-02 11:07:11 pages/7_🤝_Negotiate.py -> archive/stab_phase2_snapshot/7_🤝_Negotiate.py
+2025-12-02 11:07:11 pages/8_📑_Reports.py -> archive/stab_phase2_snapshot/8_📑_Reports.py
+
+# Total files archived: 7
+# Missing files: None
