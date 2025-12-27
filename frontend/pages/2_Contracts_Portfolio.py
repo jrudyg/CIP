@@ -359,6 +359,9 @@ def render_floating_action_bar(filtered: List[Dict]):
                     ids = list(selected_ids)
                     st.session_state["v1_id"] = ids[0]
                     st.session_state["v2_id"] = ids[1]
+                    # Clear dropdown widget keys so they pick up new values
+                    st.session_state.pop("v1_selector_dropdown", None)
+                    st.session_state.pop("v2_selector_dropdown", None)
                     clear_selection()
                     st.switch_page("pages/6_Compare_Versions.py")
             else:

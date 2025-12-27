@@ -309,7 +309,7 @@ LEARNING_HTML = '''
         
         .brain-label.visible { opacity: 1; }
         
-        /* Output arrows (right side) */
+        /* Output arrows (right side) - FIXED: horizontal alignment with cards */
         .output-arrow {
             position: absolute;
             display: flex;
@@ -320,16 +320,17 @@ LEARNING_HTML = '''
         
         .output-arrow.visible { opacity: 1; }
         
-        .output-arrow.faster-arrow { right: 110px; top: 55px; transform: rotate(-16deg); }
-        .output-arrow.smarter-arrow { right: 110px; top: 50%; transform: translateY(-50%); }
-        .output-arrow.safer-arrow { right: 110px; bottom: 65px; transform: rotate(16deg); }
+        /* Aligned horizontally with each card */
+        .output-arrow.faster-arrow { right: 100px; top: 20%; transform: translateY(-50%); }
+        .output-arrow.smarter-arrow { right: 100px; top: 50%; transform: translateY(-50%); }
+        .output-arrow.safer-arrow { right: 100px; top: 80%; transform: translateY(-50%); }
         
         .output-arrow .arrow-line { width: 28px; }
         .output-arrow.visible .arrow-line {
             animation: arrowPulse 2s ease-in-out infinite, outputArrowGrow 2s ease-in-out infinite;
         }
         
-        /* Result nodes (right side) */
+        /* Result nodes (right side) - FIXED: even vertical distribution */
         .result-node {
             position: absolute;
             display: flex;
@@ -339,7 +340,7 @@ LEARNING_HTML = '''
             opacity: 0;
             transform: scale(0.8);
             transition: opacity 0.5s ease, transform 0.5s ease;
-            right: 8px;
+            right: 15px;
         }
         
         .result-node.visible {
@@ -347,10 +348,13 @@ LEARNING_HTML = '''
             transform: scale(1);
         }
         
-        .result-node.faster { top: 35px; }
+        /* Even distribution: 20%, 50%, 80% */
+        .result-node.faster { top: 20%; transform: translateY(-50%); }
+        .result-node.faster.visible { transform: translateY(-50%) scale(1); }
         .result-node.smarter { top: 50%; transform: translateY(-50%); }
         .result-node.smarter.visible { transform: translateY(-50%) scale(1); }
-        .result-node.safer { bottom: 45px; }
+        .result-node.safer { top: 80%; transform: translateY(-50%); }
+        .result-node.safer.visible { transform: translateY(-50%) scale(1); }
         
         .result-icon {
             font-size: 1.2rem;

@@ -36,24 +36,6 @@ from components.contract_context import (
 )
 from cip_components import split_panel
 from zone_layout import zone_layout, check_system_health
-from theme_system import apply_theme
-from progress_indicators import render_progress_overlay
-
-# Inject centralized dark theme
-from components.theme import inject_dark_theme
-
-# ============================================================================
-# v2: COMPARE PROGRESS STAGES
-# ============================================================================
-
-COMPARE_STAGES = [
-    {"name": "Loading V1 & V2", "percent": 10},
-    {"name": "Aligning clauses", "percent": 30},
-    {"name": "Calculating text deltas", "percent": 55},
-    {"name": "Applying risk/severity", "percent": 80},
-    {"name": "Preparing view", "percent": 100},
-]
-
 # GEM Tier-3 Copy
 GEM_COPY = {
     "page_title": "Compare Contract Versions",
@@ -100,7 +82,9 @@ def get_contracts_for_selector():
     try:
         resp = requests.get(f"{API_BASE}/contracts", timeout=10)
         if resp.ok:
-            contracts = resp.json()
+            data = resp.json()
+            # Handle both list and dict response formats
+            contracts = data.get('contracts', data) if isinstance(data, dict) else data
             # Format for dropdown: display_id + title
             options = []
             for c in contracts:
@@ -119,19 +103,13 @@ def get_contracts_for_selector():
 
 
 def get_contract_clauses(contract_id: int) -> list:
-    """Get clause list for a contract (from latest analysis or extraction)"""
+    """Get clause list for a contract"""
     try:
-        # Try to get from latest analysis snapshot
-        resp = requests.get(f"{API_BASE}/contracts/{contract_id}/analysis/latest", timeout=10)
+        # Use the correct endpoint: /api/contract/{id} (singular)
+        resp = requests.get(f"{API_BASE}/contract/{contract_id}", timeout=10)
         if resp.ok:
             data = resp.json()
             return data.get('clauses', [])
-
-        # Fallback: try to get from contract text extraction
-        resp = requests.get(f"{API_BASE}/contracts/{contract_id}/clauses", timeout=10)
-        if resp.ok:
-            return resp.json().get('clauses', [])
-
         return []
     except Exception:
         return []
@@ -140,9 +118,13 @@ def get_contract_clauses(contract_id: int) -> list:
 def get_latest_snapshot_id(contract_id: int) -> int | None:
     """Get latest analysis snapshot ID for a contract"""
     try:
-        resp = requests.get(f"{API_BASE}/contracts/{contract_id}/analysis/latest", timeout=5)
+        resp = requests.get(f"{API_BASE}/contract/{contract_id}", timeout=5)
         if resp.ok:
-            return resp.json().get('snapshot_id')
+            data = resp.json()
+            # Get latest assessment ID (assessments ordered by date DESC)
+            assessments = data.get('assessments', [])
+            if assessments:
+                return assessments[0].get('id')
         return None
     except Exception:
         return None
@@ -224,8 +206,6 @@ def export_comparison_json(comparison_result: dict) -> str:
 # ============================================================================
 
 apply_spacing()
-apply_theme()
-inject_dark_theme()
 
 # Initialize contract context
 init_contract_context()
@@ -249,8 +229,6 @@ if 'comparing' not in st.session_state:
     st.session_state["comparing"] = False
 if 'comparison_result' not in st.session_state:
     st.session_state["comparison_result"] = None
-if 'compare_progress_stage' not in st.session_state:
-    st.session_state["compare_progress_stage"] = 0
 if 'compare_error' not in st.session_state:
     st.session_state["compare_error"] = None
 if 'snapshot_saved' not in st.session_state:
@@ -710,15 +688,6 @@ if st.session_state["comparing"]:
         st.error("Two distinct contract versions required")
         st.session_state["comparing"] = False
     else:
-        # Show progress overlay
-        current_stage = min(st.session_state["compare_progress_stage"], len(COMPARE_STAGES) - 1)
-        stage = COMPARE_STAGES[current_stage]
-        render_progress_overlay(
-            mode="determinate",
-            percent=stage["percent"],
-            label=stage["name"]
-        )
-
         # Perform comparison via API
         result, error = api_call_with_spinner(
             endpoint="/api/compare",
@@ -728,7 +697,7 @@ if st.session_state["comparing"]:
                 'v2_contract_id': v2_id,
                 'include_recommendations': True
             },
-            spinner_message="Comparing versions...",
+            spinner_message="Comparing versions... This may take 30-60 seconds.",
             success_message="Comparison complete!",
             timeout=600
         )
@@ -750,11 +719,7 @@ if st.session_state["comparing"]:
                 user_message = str(error)
 
             st.session_state["compare_error"] = user_message
-            render_progress_overlay(
-                mode="error",
-                label="Comparison Failed",
-                error_message=user_message
-            )
+            st.error(f"Comparison Failed: {user_message}")
         else:
             # Process result and build aligned clauses
             comparison_data = result if isinstance(result, dict) else {}
@@ -878,7 +843,6 @@ if st.session_state["comparing"]:
 
         # Reset comparison state
         st.session_state["comparing"] = False
-        st.session_state["compare_progress_stage"] = 0
 
         if st.session_state["comparison_result"]:
             st.rerun()
