@@ -28,6 +28,7 @@ def get_db_connection():
     """Get database connection with row factory."""
     conn = sqlite3.connect(str(CONTRACTS_DB))
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 

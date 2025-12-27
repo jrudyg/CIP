@@ -299,8 +299,10 @@ def compute_payload_ref(data: Any) -> str:
 # ============================================================================
 
 def get_db_connection():
-    """Get database connection."""
-    return sqlite3.connect(str(CONTRACTS_DB))
+    """Get database connection with FK enforcement."""
+    conn = sqlite3.connect(str(CONTRACTS_DB))
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 
 def ensure_embedding_cache_table():
