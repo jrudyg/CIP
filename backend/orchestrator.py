@@ -1107,7 +1107,7 @@ class ContractOrchestrator:
                 assessment.contract_id,
                 item.section_number,
                 item.section_title,
-                item.finding,
+                item.clause_text or item.finding,
                 item.category,
                 item.risk_level,
                 item.pattern_id
