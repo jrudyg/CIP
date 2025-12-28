@@ -233,6 +233,10 @@ if 'compare_error' not in st.session_state:
     st.session_state["compare_error"] = None
 if 'snapshot_saved' not in st.session_state:
     st.session_state["snapshot_saved"] = False
+if 'comparison_cached' not in st.session_state:
+    st.session_state["comparison_cached"] = False
+if 'comparison_hash' not in st.session_state:
+    st.session_state["comparison_hash"] = None
 # Phase 4E: Compare v3 session state
 if 'compare_v3_result' not in st.session_state:
     st.session_state["compare_v3_result"] = None
@@ -322,6 +326,8 @@ def z1_version_selectors():
                 st.session_state["comparison_result"] = None
                 st.session_state["compare_error"] = None
                 st.session_state["snapshot_saved"] = False
+                st.session_state["comparison_cached"] = False
+                st.session_state["comparison_hash"] = None
                 st.rerun()
     else:
         st.caption("Select both V1 and V2 to compare")
@@ -333,6 +339,18 @@ def z2_comparison_summary():
 
     if st.session_state["comparison_result"]:
         result = st.session_state["comparison_result"]
+
+        # Cache indicator
+        if st.session_state.get("comparison_cached"):
+            st.markdown("""
+                <div style="background: linear-gradient(135deg, #1E3A5F 0%, #0D1B2A 100%);
+                            border: 1px solid #3B82F6; border-radius: 8px; padding: 8px 12px;
+                            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 18px;">⚡</span>
+                    <span style="color: #60A5FA; font-weight: 600;">Cached Result</span>
+                    <span style="color: #94A3B8; font-size: 12px; margin-left: auto;">Instant</span>
+                </div>
+            """, unsafe_allow_html=True)
 
         similarity = result.get('similarity_score', 0)
         total_changes = result.get('total_changes', 0)
@@ -723,6 +741,15 @@ if st.session_state["comparing"]:
         else:
             # Process result and build aligned clauses
             comparison_data = result if isinstance(result, dict) else {}
+
+            # Capture cache status from API response
+            is_cached = comparison_data.get('cached', False)
+            st.session_state["comparison_cached"] = is_cached
+            st.session_state["comparison_hash"] = comparison_data.get('comparison_hash')
+
+            # Show toast for cached results
+            if is_cached:
+                toast_info("Result from cache (instant)")
 
             # Get clause lists for alignment
             v1_clauses = get_contract_clauses(v1_id)
