@@ -1098,6 +1098,9 @@ class ContractOrchestrator:
             assessment.standard_items
         )
 
+        # Delete existing clauses before inserting new ones (prevents duplicates on re-analysis)
+        cursor.execute("DELETE FROM clauses WHERE contract_id = ?", (assessment.contract_id,))
+
         for item in all_items:
             cursor.execute("""
                 INSERT INTO clauses (
