@@ -1421,6 +1421,7 @@ def compare_contracts():
     v1_id = data.get('v1_contract_id')
     v2_id = data.get('v2_contract_id')
     include_recommendations = data.get('include_recommendations', True)
+    force_refresh = data.get('force_refresh', False)
 
     if not v1_id or not v2_id:
         return jsonify({'error': 'Both v1_contract_id and v2_contract_id required'}), 400
@@ -1501,34 +1502,37 @@ def compare_contracts():
         if v1_hash and v2_hash:
             comparison_hash = hashlib.sha256(f"{v1_hash}:{v2_hash}".encode()).hexdigest()
 
-            # Check cache
-            cursor.execute("""
-                SELECT comparison_id, result_json, created_at
-                FROM comparison_snapshots
-                WHERE comparison_hash = ?
-            """, (comparison_hash,))
-            cached = cursor.fetchone()
+            # Check cache (skip if force_refresh)
+            if not force_refresh:
+                cursor.execute("""
+                    SELECT comparison_id, result_json, created_at
+                    FROM comparison_snapshots
+                    WHERE comparison_hash = ?
+                """, (comparison_hash,))
+                cached = cursor.fetchone()
 
-            if cached and cached['result_json']:
-                logger.info(f"Cache HIT for comparison_hash {comparison_hash[:16]}...")
-                cached_results = json.loads(cached['result_json'])
-                conn.close()
-                return jsonify({
-                    'status': 'completed',
-                    'cached': True,
-                    'comparison_id': cached['comparison_id'],
-                    'cache_created_at': cached['created_at'],
-                    'comparison_hash': comparison_hash,
-                    'total_changes': cached_results.get('total_changes', 0),
-                    'impact_breakdown': cached_results.get('impact_breakdown', {}),
-                    'executive_summary': cached_results.get('executive_summary', ''),
-                    'v1_contract': {'id': v1_id, 'filename': v1_contract['filename']},
-                    'v2_contract': {'id': v2_id, 'filename': v2_contract['filename']},
-                    'v1_risk': v1_contract.get('risk_level') or 'Unknown',
-                    'v2_risk': v2_contract.get('risk_level') or 'Unknown'
-                }), 200
+                if cached and cached['result_json']:
+                    logger.info(f"Cache HIT for comparison_hash {comparison_hash[:16]}...")
+                    cached_results = json.loads(cached['result_json'])
+                    conn.close()
+                    return jsonify({
+                        'status': 'completed',
+                        'cached': True,
+                        'comparison_id': cached['comparison_id'],
+                        'cache_created_at': cached['created_at'],
+                        'comparison_hash': comparison_hash,
+                        'total_changes': cached_results.get('total_changes', 0),
+                        'impact_breakdown': cached_results.get('impact_breakdown', {}),
+                        'executive_summary': cached_results.get('executive_summary', ''),
+                        'v1_contract': {'id': v1_id, 'filename': v1_contract['filename']},
+                        'v2_contract': {'id': v2_id, 'filename': v2_contract['filename']},
+                        'v1_risk': v1_contract.get('risk_level') or 'Unknown',
+                        'v2_risk': v2_contract.get('risk_level') or 'Unknown'
+                    }), 200
+                else:
+                    logger.info(f"Cache MISS for comparison_hash {comparison_hash[:16]}...")
             else:
-                logger.info(f"Cache MISS for comparison_hash {comparison_hash[:16]}...")
+                logger.info(f"Cache BYPASS (force_refresh) for comparison_hash {comparison_hash[:16]}...")
         else:
             comparison_hash = None
             logger.warning("Cannot cache: content_hash missing for one or both contracts")

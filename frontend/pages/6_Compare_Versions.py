@@ -245,6 +245,8 @@ if 'compare_v3_running' not in st.session_state:
 # Navigation session state for Redline-style view
 if 'compare_current_index' not in st.session_state:
     st.session_state["compare_current_index"] = 0
+if 'force_refresh' not in st.session_state:
+    st.session_state["force_refresh"] = False
 
 # ============================================================================
 # ZONE CONTENT FUNCTIONS
@@ -324,6 +326,9 @@ def z1_version_selectors():
         else:
             st.success("Ready to compare")
 
+            # Force fresh option
+            force_fresh = st.checkbox("Force fresh comparison (skip cache)", key="force_fresh_cb")
+
             if st.button("🔍 Compare Versions", type="primary", use_container_width=True):
                 st.session_state["comparing"] = True
                 st.session_state["comparison_result"] = None
@@ -332,6 +337,7 @@ def z1_version_selectors():
                 st.session_state["comparison_cached"] = False
                 st.session_state["comparison_hash"] = None
                 st.session_state["compare_current_index"] = 0  # Reset navigation
+                st.session_state["force_refresh"] = force_fresh  # Store for API call
                 st.rerun()
     else:
         st.caption("Select both V1 and V2 to compare")
@@ -812,13 +818,15 @@ if st.session_state["comparing"]:
         st.session_state["comparing"] = False
     else:
         # Perform comparison via API
+        force_refresh = st.session_state.get("force_refresh", False)
         result, error = api_call_with_spinner(
             endpoint="/api/compare",
             method="POST",
             data={
                 'v1_contract_id': v1_id,
                 'v2_contract_id': v2_id,
-                'include_recommendations': True
+                'include_recommendations': True,
+                'force_refresh': force_refresh
             },
             spinner_message="Comparing versions... This may take 30-60 seconds.",
             success_message="Comparison complete!",
@@ -928,10 +936,19 @@ if st.session_state["comparing"]:
                     })
                     added_count += 1
 
-            # Calculate similarity score
+            # Calculate similarity score (weighted by match quality)
             total_clauses = max(len(v1_clauses), len(v2_clauses), 1)
-            high_matches = sum(1 for a in aligned_clauses if a['match_type'] == 'High Match')
-            similarity_score = (high_matches / total_clauses) * 100
+            weighted_matches = 0
+            for a in aligned_clauses:
+                mt = a.get('match_type', '')
+                if mt == 'High Match':
+                    weighted_matches += 1.0
+                elif mt == 'Likely Match':
+                    weighted_matches += 0.75
+                elif mt == 'Best Guess':
+                    weighted_matches += 0.5
+                # No Match, Added = 0
+            similarity_score = (weighted_matches / total_clauses) * 100
 
             # Build result object
             st.session_state["comparison_result"] = {
