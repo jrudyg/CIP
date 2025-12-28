@@ -1492,6 +1492,45 @@ def compare_contracts():
 
         logger.info(f"Comparing: {v1_file.name} → {v2_file.name}")
 
+        # === CACHE LOOKUP ===
+        # Compute comparison_hash from content hashes
+        import hashlib
+        v1_hash = v1_contract.get('content_hash') or ''
+        v2_hash = v2_contract.get('content_hash') or ''
+
+        if v1_hash and v2_hash:
+            comparison_hash = hashlib.sha256(f"{v1_hash}:{v2_hash}".encode()).hexdigest()
+
+            # Check cache
+            cursor.execute("""
+                SELECT comparison_id, result_json, created_at
+                FROM comparison_snapshots
+                WHERE comparison_hash = ?
+            """, (comparison_hash,))
+            cached = cursor.fetchone()
+
+            if cached and cached['result_json']:
+                logger.info(f"Cache HIT for comparison_hash {comparison_hash[:16]}...")
+                cached_results = json.loads(cached['result_json'])
+                conn.close()
+                return jsonify({
+                    'status': 'completed',
+                    'cached': True,
+                    'comparison_id': cached['comparison_id'],
+                    'cache_created_at': cached['created_at'],
+                    'comparison_hash': comparison_hash,
+                    'total_changes': cached_results.get('total_changes', 0),
+                    'impact_breakdown': cached_results.get('impact_breakdown', {}),
+                    'executive_summary': cached_results.get('executive_summary', ''),
+                    'v1_contract': {'id': v1_id, 'filename': v1_contract['filename']},
+                    'v2_contract': {'id': v2_id, 'filename': v2_contract['filename']}
+                }), 200
+            else:
+                logger.info(f"Cache MISS for comparison_hash {comparison_hash[:16]}...")
+        else:
+            comparison_hash = None
+            logger.warning("Cannot cache: content_hash missing for one or both contracts")
+
         # Create output paths
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         reports_dir = PathLib(__file__).parent.parent / "data" / "reports"
@@ -1620,6 +1659,38 @@ def compare_contracts():
         comparison_id = reports_cursor.lastrowid
         reports_conn.commit()
         reports_conn.close()
+
+        # === CACHE WRITE ===
+        # Store in comparison_snapshots for future cache hits
+        if comparison_hash:
+            try:
+                cache_data = {
+                    'total_changes': comparison_results['total_changes'],
+                    'impact_breakdown': impact_counts,
+                    'executive_summary': executive_summary,
+                    'changes': comparison_results.get('changes', [])
+                }
+                cursor.execute("""
+                    INSERT INTO comparison_snapshots (
+                        v1_contract_id, v2_contract_id, comparison_hash,
+                        similarity_score, changed_clauses, risk_delta,
+                        result_json, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    v1_id,
+                    v2_id,
+                    comparison_hash,
+                    100.0 - (comparison_results['total_changes'] * 2),  # Rough similarity
+                    json.dumps(comparison_results.get('changes', [])),
+                    json.dumps(impact_counts),
+                    json.dumps(cache_data),
+                    datetime.now().isoformat()
+                ))
+                conn.commit()
+                logger.info(f"Cache WRITE for comparison_hash {comparison_hash[:16]}...")
+            except Exception as cache_err:
+                logger.warning(f"Cache write failed (non-critical): {cache_err}")
+
         conn.close()
 
         logger.info(f"Comparison stored with ID: {comparison_id}")
@@ -1627,7 +1698,9 @@ def compare_contracts():
         # Return response
         return jsonify({
             'status': 'completed',
+            'cached': False,
             'comparison_id': comparison_id,
+            'comparison_hash': comparison_hash,
             'report_path': str(report_docx_path) if report_docx_path else None,
             'json_path': str(comparison_json_path),
             'claude_enhanced': comparison_results.get('claude_enhanced', False),
