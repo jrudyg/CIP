@@ -486,10 +486,10 @@ def z4_side_by_side():
         st.markdown("**V1: Original**")
         v1_clause = pair.get('v1')
         if v1_clause:
-            clause_num = v1_clause.get('number') or 'N/A'
+            clause_num = v1_clause.get('section_number') or 'N/A'
             clause_title = v1_clause.get('title') or 'Untitled'
             clause_text = v1_clause.get('text') or v1_clause.get('content') or ''
-            severity = v1_clause.get('severity') or ''
+            severity = v1_clause.get('risk_level') or v1_clause.get('severity') or ''
             
             st.markdown(f"**{clause_num}. {clause_title}**")
             if severity:
@@ -518,10 +518,10 @@ def z4_side_by_side():
         st.markdown("**V2: Revised**")
         v2_clause = pair.get('v2')
         if v2_clause:
-            clause_num = v2_clause.get('number') or 'N/A'
+            clause_num = v2_clause.get('section_number') or 'N/A'
             clause_title = v2_clause.get('title') or 'Untitled'
             clause_text = v2_clause.get('text') or v2_clause.get('content') or ''
-            severity = v2_clause.get('severity') or ''
+            severity = v2_clause.get('risk_level') or v2_clause.get('severity') or ''
             
             st.markdown(f"**{clause_num}. {clause_title}**")
             if severity:
@@ -886,8 +886,8 @@ if st.session_state["comparing"]:
                     if idx in v2_matched:
                         continue
 
-                    # Score by number + title similarity
-                    number_match = 1.0 if v1_clause.get('number') == v2_clause.get('number') else 0.0
+                    # Score by section_number + title similarity
+                    number_match = 1.0 if v1_clause.get('section_number') == v2_clause.get('section_number') else 0.0
                     title_sim = SequenceMatcher(
                         None,
                         (v1_clause.get('title') or '').lower(),
@@ -978,8 +978,8 @@ if st.session_state["comparing"]:
                 similarity_score=similarity_score,
                 changed_clauses=[
                     {
-                        'v1_number': a['v1'].get('number') if a['v1'] else None,
-                        'v2_number': a['v2'].get('number') if a['v2'] else None,
+                        'v1_number': a['v1'].get('section_number') if a['v1'] else None,
+                        'v2_number': a['v2'].get('section_number') if a['v2'] else None,
                         'match_type': a['match_type']
                     }
                     for a in aligned_clauses if a['match_type'] != 'High Match'
