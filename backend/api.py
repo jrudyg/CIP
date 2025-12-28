@@ -2107,7 +2107,11 @@ def delete_contract(contract_id):
 
         filename = contract['filename']
 
+        # Unlink any child contracts (set parent_id to NULL)
+        cursor.execute("UPDATE contracts SET parent_id = NULL WHERE parent_id = ?", (contract_id,))
+
         # Delete related records first (foreign key constraints)
+        # Note: Most tables have CASCADE DELETE, but we explicitly delete for safety
         cursor.execute("DELETE FROM clauses WHERE contract_id = ?", (contract_id,))
         cursor.execute("DELETE FROM risk_assessments WHERE contract_id = ?", (contract_id,))
 
@@ -2190,6 +2194,9 @@ def delete_contracts_batch():
                 if not contract:
                     errors.append(f"Contract {contract_id} not found")
                     continue
+
+                # Unlink any child contracts (set parent_id to NULL)
+                cursor.execute("UPDATE contracts SET parent_id = NULL WHERE parent_id = ?", (contract_id,))
 
                 # Delete related records first
                 cursor.execute("DELETE FROM clauses WHERE contract_id = ?", (contract_id,))
