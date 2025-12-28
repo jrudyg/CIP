@@ -4634,6 +4634,13 @@ try:
 except ImportError as e:
     logger.warning(f"Health Score API not available: {e}")
 
+try:
+    from qa_api import register_qa
+    register_qa(app)
+    logger.info("QA/QC API endpoints registered")
+except ImportError as e:
+    logger.warning(f"QA/QC API not available: {e}")
+
 
 # ============================================================================
 # MAIN

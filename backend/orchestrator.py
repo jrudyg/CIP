@@ -960,6 +960,7 @@ class ContractOrchestrator:
                     check_same_thread=False
                 )
                 self._db_connections[thread_id].row_factory = sqlite3.Row
+                self._db_connections[thread_id].execute("PRAGMA foreign_keys = ON")
                 logger.debug(f"Created DB connection for thread {thread_id}")
             except Exception as e:
                 logger.error(f"Database connection error: {e}")
@@ -1642,6 +1643,7 @@ def save_analysis_snapshot(
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -1689,6 +1691,7 @@ def load_analysis_history(db_path: str, contract_id: int, limit: int = 10) -> Li
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -1734,6 +1737,7 @@ def load_analysis_snapshot(db_path: str, snapshot_id: int) -> Optional[Dict]:
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -1794,6 +1798,7 @@ def save_comparison_snapshot(
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -1837,6 +1842,7 @@ def load_comparison_snapshot(db_path: str, comparison_id: int) -> Optional[Dict]
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -1888,6 +1894,7 @@ def load_comparison_history(
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -2518,6 +2525,7 @@ def save_redline_snapshot(db_path: str, snapshot) -> int:
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
 
         # v4: Serialize clauses to JSON with all v4 fields
@@ -2585,6 +2593,7 @@ def load_redline_snapshot(db_path: str, redline_id: int):
 
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -2656,6 +2665,7 @@ def load_redline_history(db_path: str, contract_id: int, limit: int = 10) -> lis
 
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -2731,6 +2741,7 @@ def create_pending_draft_from_redline(db_path: str, base_contract_id: int, redli
     """
     try:
         conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
