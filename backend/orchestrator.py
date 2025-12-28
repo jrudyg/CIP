@@ -1660,11 +1660,10 @@ def save_analysis_snapshot(
 
         snapshot_id = cursor.lastrowid
 
-        # Note: last_analyzed_at column not in contracts table yet
-        # TODO: Add via migration before enabling
-        # cursor.execute("""
-        #     UPDATE contracts SET last_analyzed_at = ? WHERE id = ?
-        # """, (datetime.now().isoformat(), contract_id))
+        # Update last_analyzed_at for staleness detection (B12 fix)
+        cursor.execute("""
+            UPDATE contracts SET last_analyzed_at = ? WHERE id = ?
+        """, (datetime.now().isoformat(), contract_id))
 
         conn.commit()
         conn.close()

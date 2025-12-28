@@ -429,6 +429,7 @@ def find_related_contracts(parties: List[str], exclude_id: Optional[int] = None)
         
         conn = sqlite3.connect(str(CONTRACTS_DB))
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
         
         # Build query for party matching

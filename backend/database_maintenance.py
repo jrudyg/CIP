@@ -12,6 +12,7 @@ DB_PATH = Path(__file__).parent.parent / "data" / "contracts.db"
 def add_missing_indexes():
     """Add performance indexes to database"""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
     cursor = conn.cursor()
 
     indexes = [
@@ -44,6 +45,7 @@ def add_missing_indexes():
 def analyze_database():
     """Analyze database for query optimization"""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
     cursor = conn.cursor()
 
     print("Analyzing database...")
@@ -55,6 +57,7 @@ def analyze_database():
 def vacuum_database():
     """Reclaim unused space"""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
 
     # Get size before
     cursor = conn.cursor()
@@ -82,6 +85,7 @@ def vacuum_database():
 def check_integrity():
     """Check database integrity"""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
     cursor = conn.cursor()
 
     print("Checking database integrity...")
@@ -98,6 +102,7 @@ def check_integrity():
 def get_statistics():
     """Get database statistics"""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
     cursor = conn.cursor()
 
     print("Database Statistics:")
@@ -122,6 +127,7 @@ def get_statistics():
 def remove_orphaned_records():
     """Remove records with no parent contract"""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
     cursor = conn.cursor()
 
     print("Checking for orphaned records...")
