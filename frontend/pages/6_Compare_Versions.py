@@ -502,9 +502,9 @@ def z4_side_by_side():
                 st.info("No clause text available")
         else:
             st.markdown(
-                "<div style='background: rgba(239, 68, 68, 0.1); border: 1px dashed #EF4444; "
-                "border-radius: 6px; padding: 24px; text-align: center; color: #EF4444;'>"
-                "<strong>— Removed in V2 —</strong></div>",
+                "<div style='background: rgba(59, 130, 246, 0.1); border: 1px dashed #3B82F6; "
+                "border-radius: 6px; padding: 24px; text-align: center; color: #3B82F6;'>"
+                "<strong>— New in V2 —</strong></div>",
                 unsafe_allow_html=True
             )
 
@@ -534,9 +534,9 @@ def z4_side_by_side():
                 st.info("No clause text available")
         else:
             st.markdown(
-                "<div style='background: rgba(59, 130, 246, 0.1); border: 1px dashed #3B82F6; "
-                "border-radius: 6px; padding: 24px; text-align: center; color: #3B82F6;'>"
-                "<strong>— Added in V2 —</strong></div>",
+                "<div style='background: rgba(239, 68, 68, 0.1); border: 1px dashed #EF4444; "
+                "border-radius: 6px; padding: 24px; text-align: center; color: #EF4444;'>"
+                "<strong>— Not in V2 —</strong></div>",
                 unsafe_allow_html=True
             )
 
