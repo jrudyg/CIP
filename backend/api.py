@@ -1523,7 +1523,9 @@ def compare_contracts():
                     'impact_breakdown': cached_results.get('impact_breakdown', {}),
                     'executive_summary': cached_results.get('executive_summary', ''),
                     'v1_contract': {'id': v1_id, 'filename': v1_contract['filename']},
-                    'v2_contract': {'id': v2_id, 'filename': v2_contract['filename']}
+                    'v2_contract': {'id': v2_id, 'filename': v2_contract['filename']},
+                    'v1_risk': v1_contract.get('risk_level') or 'Unknown',
+                    'v2_risk': v2_contract.get('risk_level') or 'Unknown'
                 }), 200
             else:
                 logger.info(f"Cache MISS for comparison_hash {comparison_hash[:16]}...")
@@ -1714,7 +1716,9 @@ def compare_contracts():
             'v2_contract': {
                 'id': v2_id,
                 'filename': v2_contract['filename']
-            }
+            },
+            'v1_risk': v1_contract.get('risk_level') or 'Unknown',
+            'v2_risk': v2_contract.get('risk_level') or 'Unknown'
         }), 200
 
     except ImportError as e:

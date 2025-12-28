@@ -242,6 +242,9 @@ if 'compare_v3_result' not in st.session_state:
     st.session_state["compare_v3_result"] = None
 if 'compare_v3_running' not in st.session_state:
     st.session_state["compare_v3_running"] = False
+# Navigation session state for Redline-style view
+if 'compare_current_index' not in st.session_state:
+    st.session_state["compare_current_index"] = 0
 
 # ============================================================================
 # ZONE CONTENT FUNCTIONS
@@ -328,6 +331,7 @@ def z1_version_selectors():
                 st.session_state["snapshot_saved"] = False
                 st.session_state["comparison_cached"] = False
                 st.session_state["comparison_hash"] = None
+                st.session_state["compare_current_index"] = 0  # Reset navigation
                 st.rerun()
     else:
         st.caption("Select both V1 and V2 to compare")
@@ -397,7 +401,7 @@ def z3_match_legend():
 
 
 def z4_side_by_side():
-    """Z4: Side-by-side clause comparison - GEM Section: Clause Comparison"""
+    """Z4: Side-by-side clause comparison - Redline-style single-item navigation"""
     section_header(GEM_COPY["section_comparison"], "📝")
 
     if not st.session_state["comparison_result"]:
@@ -411,65 +415,166 @@ def z4_side_by_side():
         st.info(GEM_COPY["no_changes"])
         return
 
-    # Side-by-side columns
+    # Get current index
+    total = len(aligned)
+    idx = st.session_state.get("compare_current_index", 0)
+    
+    # Clamp to valid range
+    if idx >= total:
+        idx = total - 1
+        st.session_state["compare_current_index"] = idx
+    if idx < 0:
+        idx = 0
+        st.session_state["compare_current_index"] = idx
+
+    pair = aligned[idx]
+    match_type = pair.get('match_type', 'Unknown')
+    similarity = pair.get('similarity', 0)
+
+    # Match type colors
+    match_colors = {
+        "High Match": "#10B981",
+        "Likely Match": "#F59E0B",
+        "Best Guess": "#F97316",
+        "Added": "#3B82F6",
+        "No Match": "#EF4444"
+    }
+    match_color = match_colors.get(match_type, "#6B7280")
+
+    # Navigation row
+    nav_col1, nav_col2, nav_col3 = st.columns([1, 3, 1])
+    
+    with nav_col1:
+        if st.button("◀ Prev", disabled=(idx == 0), use_container_width=True, key="cmp_prev"):
+            st.session_state["compare_current_index"] = idx - 1
+            st.rerun()
+    
+    with nav_col2:
+        # Progress indicator
+        st.markdown(
+            f"<div style='text-align: center; padding: 8px;'>"
+            f"<span style='font-size: 14px; color: #94A3B8;'>Clause {idx + 1} of {total}</span>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+    
+    with nav_col3:
+        if st.button("Next ▶", disabled=(idx >= total - 1), use_container_width=True, key="cmp_next"):
+            st.session_state["compare_current_index"] = idx + 1
+            st.rerun()
+
+    # Match type badge
+    st.markdown(
+        f"<div style='background: {match_color}20; border-left: 4px solid {match_color}; "
+        f"padding: 8px 12px; border-radius: 4px; margin: 8px 0;'>"
+        f"<span style='color: {match_color}; font-weight: 600;'>{match_type}</span>"
+        f"<span style='color: #94A3B8; margin-left: 12px;'>Similarity: {similarity:.0%}</span>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+
+    # Two-column side-by-side layout
     col_v1, col_v2 = st.columns(2)
 
     with col_v1:
-        st.markdown("#### V1: Original")
-        v1_contract = st.session_state["v1_contract"]
-        if v1_contract:
-            st.caption(v1_contract.get('title') or 'Unknown')
-
-    with col_v2:
-        st.markdown("#### V2: Revised")
-        v2_contract = st.session_state["v2_contract"]
-        if v2_contract:
-            st.caption(v2_contract.get('title') or 'Unknown')
-
-    st.markdown("---")
-
-    # Show aligned clauses
-    for idx, pair in enumerate(aligned[:30]):  # Limit to 30 for performance
-        match_type = pair.get('match_type', 'Unknown')
-        similarity = pair.get('similarity', 0)
-
-        # Match type badge
-        badge_colors = {
-            "High Match": "#10B981",
-            "Likely Match": "#F59E0B",
-            "Best Guess": "#F97316",
-            "Added": "#3B82F6",
-            "No Match": "#EF4444"
-        }
-        badge_color = badge_colors.get(match_type, "#6B7280")
-
-        with st.expander(f"{match_type} ({similarity:.0%})", expanded=(match_type != "High Match")):
-            exp_col1, exp_col2 = st.columns(2)
-
-            with exp_col1:
-                v1_clause = pair.get('v1')
-                if v1_clause:
-                    st.markdown(f"**{v1_clause.get('number') or 'N/A'}. {v1_clause.get('title') or 'Untitled'}**")
-                    st.caption(v1_clause.get('severity', ''))
-                else:
-                    st.markdown("*— Removed —*")
-
-            with exp_col2:
-                v2_clause = pair.get('v2')
-                if v2_clause:
-                    st.markdown(f"**{v2_clause.get('number') or 'N/A'}. {v2_clause.get('title') or 'Untitled'}**")
-                    st.caption(v2_clause.get('severity', ''))
-                else:
-                    st.markdown("*— Added —*")
-
-            # Adjust match stub (placeholder for manual override)
+        st.markdown("**V1: Original**")
+        v1_clause = pair.get('v1')
+        if v1_clause:
+            clause_num = v1_clause.get('number') or 'N/A'
+            clause_title = v1_clause.get('title') or 'Untitled'
+            clause_text = v1_clause.get('text') or v1_clause.get('content') or ''
+            severity = v1_clause.get('severity') or ''
+            
+            st.markdown(f"**{clause_num}. {clause_title}**")
+            if severity:
+                st.caption(f"Risk: {severity}")
+            
+            # Display clause text in styled container
+            if clause_text:
+                st.markdown(
+                    f"<div style='background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1); "
+                    f"border-radius: 6px; padding: 12px; min-height: 150px; max-height: 300px; "
+                    f"overflow-y: auto; font-size: 14px; line-height: 1.6; color: #E2E8F0;'>"
+                    f"{clause_text[:1000]}{'...' if len(clause_text) > 1000 else ''}</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.info("No clause text available")
+        else:
             st.markdown(
-                f"<a href='#' style='font-size: 12px; color: #60A5FA;'>Adjust match</a>",
+                "<div style='background: rgba(239, 68, 68, 0.1); border: 1px dashed #EF4444; "
+                "border-radius: 6px; padding: 24px; text-align: center; color: #EF4444;'>"
+                "<strong>— Removed in V2 —</strong></div>",
                 unsafe_allow_html=True
             )
 
-    if len(aligned) > 30:
-        st.caption(f"Showing 30 of {len(aligned)} clause pairs")
+    with col_v2:
+        st.markdown("**V2: Revised**")
+        v2_clause = pair.get('v2')
+        if v2_clause:
+            clause_num = v2_clause.get('number') or 'N/A'
+            clause_title = v2_clause.get('title') or 'Untitled'
+            clause_text = v2_clause.get('text') or v2_clause.get('content') or ''
+            severity = v2_clause.get('severity') or ''
+            
+            st.markdown(f"**{clause_num}. {clause_title}**")
+            if severity:
+                st.caption(f"Risk: {severity}")
+            
+            # Display clause text in styled container
+            if clause_text:
+                st.markdown(
+                    f"<div style='background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1); "
+                    f"border-radius: 6px; padding: 12px; min-height: 150px; max-height: 300px; "
+                    f"overflow-y: auto; font-size: 14px; line-height: 1.6; color: #E2E8F0;'>"
+                    f"{clause_text[:1000]}{'...' if len(clause_text) > 1000 else ''}</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.info("No clause text available")
+        else:
+            st.markdown(
+                "<div style='background: rgba(59, 130, 246, 0.1); border: 1px dashed #3B82F6; "
+                "border-radius: 6px; padding: 24px; text-align: center; color: #3B82F6;'>"
+                "<strong>— Added in V2 —</strong></div>",
+                unsafe_allow_html=True
+            )
+
+    # Jump to dropdown
+    st.markdown("---")
+    col_jump, col_filter = st.columns([2, 2])
+    
+    with col_jump:
+        # Build jump options - show match type for each
+        jump_options = [f"{i+1}. {aligned[i].get('match_type', '?')}" for i in range(total)]
+        selected = st.selectbox(
+            "Jump to",
+            options=range(total),
+            format_func=lambda i: jump_options[i],
+            index=idx,
+            key="cmp_jump"
+        )
+        if selected != idx:
+            st.session_state["compare_current_index"] = selected
+            st.rerun()
+    
+    with col_filter:
+        # Quick filter by match type
+        match_types = list(set(p.get('match_type', 'Unknown') for p in aligned))
+        match_types.sort()
+        filter_type = st.selectbox(
+            "Filter by type",
+            options=["All"] + match_types,
+            key="cmp_filter"
+        )
+        if filter_type != "All":
+            # Find first match of this type
+            for i, p in enumerate(aligned):
+                if p.get('match_type') == filter_type:
+                    if i != idx:
+                        st.session_state["compare_current_index"] = i
+                        st.rerun()
+                    break
 
 
 def z5_business_impact():
