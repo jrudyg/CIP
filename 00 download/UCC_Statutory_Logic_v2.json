@@ -1,0 +1,1020 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "created": "2026-01-04",
+    "updated": "2026-01-04",
+    "jurisdiction": "Delaware",
+    "source": "6 Del. C. § 2 (Uniform Commercial Code)",
+    "purpose": "Comprehensive statutory and pattern detection for Systems Integrator contracts",
+    "coverage": "UCC Article 2 + Common Law SI Patterns",
+    "rule_count": 35,
+    "cascade_count": 12
+  },
+
+  "rules": [
+    {
+      "id": "UCC-2-719",
+      "citation": "6 Del. C. § 2-719",
+      "title": "Contractual Modification or Limitation of Remedy",
+      "category": "REMEDY_LIMITATION",
+      "subsections": {
+        "2-719(1)": "Agreement may provide for remedies in addition to or substitution for those provided by this Article",
+        "2-719(2)": "Where circumstances cause an exclusive or limited remedy to fail of its essential purpose, remedy may be had as provided in this title",
+        "2-719(3)": "Limitation of consequential damages for injury to person in consumer goods is prima facie unconscionable"
+      },
+      "trigger_concepts": [
+        "prepayment lock", "non-refundable", "remedy veto", "sole remedy",
+        "exclusive remedy", "limited remedy", "waiver of remedy", "no refund",
+        "forfeiture", "full prepayment", "only remedy", "exclusive recourse"
+      ],
+      "risk_multiplier": 10.0,
+      "forensic_logic": {
+        "primary_test": "Does the clause create a 'failure of essential purpose' by removing all meaningful remedies?",
+        "si_concern": "If vendor's remedy fails, can you still recover to satisfy your client obligations?",
+        "cascade_detection": {
+          "trigger_section": "Payment Terms",
+          "affected_section": "Termination",
+          "pattern": "If prepayment is mandatory AND withholding is restricted AND termination credits are absent, flag as illusory remedy"
+        },
+        "key_indicators": [
+          "Mandatory prepayment >$5,000 before work begins",
+          "Withholding restricted to 'explicitly documented' criteria only",
+          "No credit or refund upon early termination",
+          "Cure period extends beyond prepayment consumption"
+        ]
+      },
+      "severity": "CRITICAL",
+      "business_impact": "Client loses all self-help remedies; vendor holds unilateral control over dispute resolution",
+      "si_impact": "If vendor equipment fails, your only remedy may be worthless repair promises while client demands performance"
+    },
+
+    {
+      "id": "UCC-2-302",
+      "citation": "6 Del. C. § 2-302",
+      "title": "Unconscionable Contract or Clause",
+      "category": "ENFORCEABILITY",
+      "subsections": {
+        "2-302(1)": "Court may refuse to enforce contract or clause found unconscionable at time made",
+        "2-302(2)": "Parties shall be afforded reasonable opportunity to present evidence as to commercial setting, purpose, and effect"
+      },
+      "trigger_concepts": [
+        "gross disparity", "waiver of gross negligence", "waiver of willful misconduct",
+        "unilateral modification", "sole discretion", "absolute discretion",
+        "without cause", "for any reason", "no liability whatsoever",
+        "take it or leave it", "non-negotiable", "standard terms"
+      ],
+      "risk_multiplier": 10.0,
+      "forensic_logic": {
+        "primary_test": "Does the clause create gross disparity in bargaining position or impose terms no reasonable person would accept?",
+        "si_concern": "OEM standard terms often heavily favor vendor - are you accepting unconscionable terms you'll have to pass to your client?",
+        "cumulative_analysis": {
+          "threshold": 3,
+          "description": "If 3+ limitation clauses combine to eliminate all client remedies, cumulative effect may be unconscionable",
+          "combination_patterns": [
+            "Prepayment + Restricted Withholding + Gross Negligence Standard",
+            "No Liability + Sole Discretion + Unilateral Termination",
+            "Waiver of Damages + Force Performance + No Refund"
+          ]
+        }
+      },
+      "severity": "CRITICAL",
+      "business_impact": "Contract or clause may be unenforceable; litigation risk elevated",
+      "si_impact": "Terms you accept from vendors may not be enforceable, leaving you without recourse"
+    },
+
+    {
+      "id": "UCC-2-717",
+      "citation": "6 Del. C. § 2-717",
+      "title": "Deduction of Damages from the Price",
+      "category": "PAYMENT_RIGHTS",
+      "subsections": {
+        "2-717": "Buyer on notifying seller of intention to do so may deduct all or any part of the damages resulting from any breach of contract from any part of the price still due under the same contract"
+      },
+      "trigger_concepts": [
+        "no set-off", "payment without deduction", "no deduction", "no offset",
+        "no withholding", "pay in full", "unconditional payment", "waive right to deduct",
+        "no right to withhold", "payment regardless"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Does the clause waive the buyer's statutory right to deduct damages from amounts owed?",
+        "si_concern": "If you can't withhold from vendors when they breach, you're financing their failures while still owing your client",
+        "cascade_detection": {
+          "trigger_section": "Payment Terms",
+          "affected_section": "Indemnification",
+          "pattern": "If buyer cannot deduct AND indemnification is delayed, buyer finances vendor's breach"
+        }
+      },
+      "severity": "HIGH",
+      "business_impact": "Client must finance vendor defaults; cash flow risk and litigation burden shifted to buyer",
+      "si_impact": "You pay vendor 100%, vendor breaches, you sue to recover while simultaneously owing client credits"
+    },
+
+    {
+      "id": "UCC-2-718",
+      "citation": "6 Del. C. § 2-718",
+      "title": "Liquidation or Limitation of Damages; Deposits",
+      "category": "DAMAGES",
+      "subsections": {
+        "2-718(1)": "Damages for breach may be liquidated but only at amount reasonable in light of anticipated or actual harm",
+        "2-718(2)": "Where seller justifiably withholds delivery, buyer is entitled to restitution of amount by which sum paid exceeds reasonable liquidated damages"
+      },
+      "trigger_concepts": [
+        "liquidated damages", "penalty clause", "deposit forfeiture",
+        "non-refundable deposit", "cancellation fee", "early termination fee",
+        "restocking fee", "delay damages", "LD cap", "daily penalty"
+      ],
+      "risk_multiplier": 6.0,
+      "forensic_logic": {
+        "primary_test": "Are liquidated damages reasonable in light of anticipated harm, or do they constitute an unenforceable penalty?",
+        "si_concern": "Compare vendor LD exposure to client LD exposure - is there a gap you absorb?",
+        "reasonableness_factors": [
+          "Anticipated harm at time of contracting",
+          "Difficulty of proving actual loss",
+          "Proportionality to contract value",
+          "Industry standard practices"
+        ],
+        "key_indicators": [
+          "Liquidated damages exceed 20% of contract value",
+          "Same damages apply regardless of breach severity",
+          "No calculation methodology provided",
+          "Forfeiture of all prepaid amounts regardless of work completed"
+        ]
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Penalty clauses may be unenforceable; excessive fees create negotiation leverage",
+      "si_impact": "Client LD of $50K/day but vendor LD capped at $10K total = $40K/day exposure"
+    },
+
+    {
+      "id": "UCC-2-725",
+      "citation": "6 Del. C. § 2-725",
+      "title": "Statute of Limitations in Contracts for Sale",
+      "category": "CLAIMS_PERIOD",
+      "subsections": {
+        "2-725(1)": "Action for breach must be commenced within four years after cause of action accrued",
+        "2-725(2)": "Parties may reduce period of limitation to not less than one year but may not extend it"
+      },
+      "trigger_concepts": [
+        "limitation period", "statute of limitations", "claims period",
+        "notice requirement", "time bar", "waiver of claims",
+        "claims must be made within", "notify within", "discover within"
+      ],
+      "risk_multiplier": 5.0,
+      "forensic_logic": {
+        "primary_test": "Does the clause improperly shorten or attempt to extend the statutory limitation period?",
+        "si_concern": "Vendor claims period shorter than client claims period = latent defect exposure",
+        "valid_range": {
+          "minimum": "1 year",
+          "maximum": "4 years",
+          "note": "Periods shorter than 1 year or longer than 4 years are unenforceable"
+        }
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Artificially shortened periods may bar legitimate claims; unenforceable if below 1 year",
+      "si_impact": "Client can claim for 4 years, vendor limits you to 1 year = 3 years unprotected"
+    },
+
+    {
+      "id": "UCC-2-312",
+      "citation": "6 Del. C. § 2-312",
+      "title": "Warranty of Title and Against Infringement",
+      "category": "WARRANTY",
+      "subsections": {
+        "2-312(1)": "Seller warrants good title, rightful transfer, goods free from security interest or lien unknown to buyer",
+        "2-312(2)": "Seller who is a merchant warrants goods are delivered free of rightful claim of infringement",
+        "2-312(3)": "Warranty can be excluded or modified only by specific language or circumstances"
+      },
+      "trigger_concepts": [
+        "title", "ownership", "lien", "security interest", "encumbrance",
+        "free and clear", "good title", "rightful owner", "IP infringement",
+        "patent infringement", "third party claims", "IP indemnity"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Does the equipment come with clear title? Are there liens or IP claims?",
+        "si_concern": "If vendor equipment has liens or IP claims, your client's system is at risk",
+        "key_indicators": [
+          "Disclaimer of title warranty",
+          "No IP indemnification",
+          "Seller not actual manufacturer",
+          "Equipment subject to financing"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Equipment could be repossessed or enjoined for IP infringement",
+      "si_impact": "Client's warehouse shuts down due to patent injunction on conveyor system you installed"
+    },
+
+    {
+      "id": "UCC-2-313",
+      "citation": "6 Del. C. § 2-313",
+      "title": "Express Warranties by Affirmation",
+      "category": "WARRANTY",
+      "subsections": {
+        "2-313(1)(a)": "Affirmation of fact or promise made by seller to buyer which relates to goods and becomes part of basis of bargain creates express warranty",
+        "2-313(1)(b)": "Description of goods which is made part of basis of bargain creates express warranty",
+        "2-313(1)(c)": "Sample or model which is made part of basis of bargain creates express warranty",
+        "2-313(2)": "No need for formal words like 'warrant' or 'guarantee' or specific intention to make warranty"
+      },
+      "trigger_concepts": [
+        "throughput", "capacity", "speed", "rate", "performance specification",
+        "cycles per", "units per hour", "uptime", "availability", "MTBF",
+        "specification", "data sheet", "proposal claims", "guaranteed"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "What specific performance claims has vendor made that constitute express warranties?",
+        "si_concern": "You may be guaranteeing system performance based on vendor's express warranties - are they protected?",
+        "key_indicators": [
+          "Performance specifications in proposal",
+          "Throughput guarantees",
+          "Uptime/availability commitments",
+          "Reference to data sheets or specifications"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Vendor bound by performance claims in sales materials and proposals",
+      "si_impact": "You guarantee client 500 units/hour based on vendor spec; equipment delivers 400 = your liability"
+    },
+
+    {
+      "id": "UCC-2-314",
+      "citation": "6 Del. C. § 2-314",
+      "title": "Implied Warranty of Merchantability",
+      "category": "WARRANTY",
+      "subsections": {
+        "2-314(1)": "Warranty of merchantability is implied in contract for sale if seller is merchant with respect to goods of that kind",
+        "2-314(2)(a)": "Goods must pass without objection in trade under contract description",
+        "2-314(2)(c)": "Goods must be fit for ordinary purposes for which such goods are used"
+      },
+      "trigger_concepts": [
+        "as is", "with all faults", "no warranty", "merchantability disclaimed",
+        "sold as is", "buyer beware", "no implied warranties",
+        "where is", "current condition"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Has the implied warranty of merchantability been disclaimed? If so, was it conspicuous?",
+        "si_concern": "AS IS equipment may not be fit for warehouse integration purposes",
+        "key_indicators": [
+          "AS IS language in caps or bold",
+          "Disclaimer of implied warranties",
+          "Used or refurbished equipment",
+          "Prototype or beta equipment"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Equipment must be fit for ordinary purpose unless properly disclaimed",
+      "si_impact": "Conveyor sold 'AS IS' breaks down; no warranty recourse but client expects working system"
+    },
+
+    {
+      "id": "UCC-2-315",
+      "citation": "6 Del. C. § 2-315",
+      "title": "Implied Warranty of Fitness for Particular Purpose",
+      "category": "WARRANTY",
+      "subsections": {
+        "2-315": "Where seller at time of contracting has reason to know particular purpose for which goods are required and that buyer is relying on seller's skill or judgment to select or furnish suitable goods, there is implied warranty goods shall be fit for such purpose"
+      },
+      "trigger_concepts": [
+        "fitness for purpose", "particular purpose", "specific application",
+        "reliance on seller", "seller recommends", "suitable for",
+        "application engineering", "configured for", "customized for"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Did vendor know your specific application? Did you rely on their recommendation?",
+        "si_concern": "If vendor recommended equipment for your client's specific application, they warrant fitness",
+        "key_indicators": [
+          "Vendor did application engineering",
+          "Vendor selected/recommended the equipment",
+          "Specific throughput or environmental requirements disclosed",
+          "Custom configuration for your application"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Vendor liable if equipment unsuitable for disclosed particular purpose",
+      "si_impact": "Vendor knew it was for cold storage; equipment fails at -20°F = vendor liability"
+    },
+
+    {
+      "id": "UCC-2-316",
+      "citation": "6 Del. C. § 2-316",
+      "title": "Exclusion or Modification of Warranties",
+      "category": "WARRANTY",
+      "subsections": {
+        "2-316(1)": "Words or conduct tending to negate warranty shall be construed wherever reasonable as consistent with each other",
+        "2-316(2)": "To exclude merchantability, language must mention merchantability and be conspicuous; to exclude fitness, exclusion must be in writing and conspicuous",
+        "2-316(3)(a)": "AS IS, WITH ALL FAULTS or similar language excludes implied warranties",
+        "2-316(3)(b)": "Examination or refusal to examine excludes defects that examination should have revealed"
+      },
+      "trigger_concepts": [
+        "as is", "with all faults", "merchantability", "fitness",
+        "no implied warranties", "disclaimer", "exclusion of warranties",
+        "conspicuous", "bold", "caps", "ALL CAPS"
+      ],
+      "risk_multiplier": 9.0,
+      "forensic_logic": {
+        "primary_test": "Is the warranty disclaimer conspicuous? Does it specifically mention merchantability?",
+        "si_concern": "Invalid warranty disclaimers may give you more protection than contract appears to provide",
+        "key_indicators": [
+          "Disclaimer buried in fine print (invalid)",
+          "Merchantability not specifically mentioned (invalid for merchantability)",
+          "Fitness disclaimer not in writing (invalid)",
+          "AS IS not conspicuous (may be invalid)"
+        ]
+      },
+      "severity": "CRITICAL",
+      "business_impact": "Improper disclaimer = warranties still exist despite contract language",
+      "si_impact": "Vendor's buried disclaimer may be unenforceable - you may have warranty rights you think you waived"
+    },
+
+    {
+      "id": "UCC-2-207",
+      "citation": "6 Del. C. § 2-207",
+      "title": "Additional Terms in Acceptance or Confirmation",
+      "category": "CONTRACT_FORMATION",
+      "subsections": {
+        "2-207(1)": "Definite expression of acceptance operates as acceptance even with additional or different terms",
+        "2-207(2)": "Additional terms become part of contract between merchants unless materially alter, offer limits acceptance, or objection given",
+        "2-207(3)": "Conduct recognizing contract existence is sufficient even without writings establishing contract"
+      },
+      "trigger_concepts": [
+        "purchase order", "acknowledgment", "confirmation", "terms and conditions",
+        "standard terms", "additional terms", "different terms", "prevail",
+        "supersede", "govern", "control", "battle of forms"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "Whose terms govern - your PO or vendor's acknowledgment?",
+        "si_concern": "Vendor acknowledgment with different warranty/liability terms may become binding",
+        "key_indicators": [
+          "Your PO silent on which terms prevail",
+          "Vendor acknowledgment adds/changes terms",
+          "Different limitation of liability provisions",
+          "Different warranty provisions",
+          "No objection to vendor's additional terms"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Vendor's terms may silently become binding through battle of forms",
+      "si_impact": "Your PO had full warranties; vendor acknowledgment disclaimed them; silence = vendor terms win"
+    },
+
+    {
+      "id": "UCC-2-609",
+      "citation": "6 Del. C. § 2-609",
+      "title": "Right to Adequate Assurance of Performance",
+      "category": "PERFORMANCE_SECURITY",
+      "subsections": {
+        "2-609(1)": "When reasonable grounds for insecurity arise, party may demand adequate assurance and suspend performance until received",
+        "2-609(2)": "Between merchants, reasonableness of grounds and adequacy of assurance determined by commercial standards",
+        "2-609(4)": "Failure to provide adequate assurance within reasonable time (not exceeding 30 days) is repudiation"
+      },
+      "trigger_concepts": [
+        "assurance", "insecurity", "suspend", "adequate assurance",
+        "reasonable grounds", "demand assurance", "performance bond",
+        "letter of credit", "guarantee", "security"
+      ],
+      "risk_multiplier": 5.0,
+      "forensic_logic": {
+        "primary_test": "Does contract preserve your right to demand assurance if vendor shows signs of trouble?",
+        "si_concern": "If vendor is struggling (missed deliveries, financial issues), can you demand assurance?",
+        "key_indicators": [
+          "Waiver of right to demand assurance",
+          "No termination for insolvency",
+          "No right to suspend for reasonable grounds"
+        ]
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Right to demand proof vendor can perform before you're committed",
+      "si_impact": "Vendor misses first milestone; you can demand assurance before paying next invoice"
+    },
+
+    {
+      "id": "UCC-2-610",
+      "citation": "6 Del. C. § 2-610",
+      "title": "Anticipatory Repudiation",
+      "category": "PERFORMANCE_SECURITY",
+      "subsections": {
+        "2-610(a)": "When either party repudiates, aggrieved party may await performance for commercially reasonable time",
+        "2-610(b)": "Aggrieved party may resort to any remedy for breach even if notified willingness to retract repudiation",
+        "2-610(c)": "Aggrieved party may suspend own performance or identify goods to contract"
+      },
+      "trigger_concepts": [
+        "repudiation", "anticipatory breach", "will not perform",
+        "cannot perform", "refuses to perform", "inability to perform",
+        "won't deliver", "cancel", "withdraw"
+      ],
+      "risk_multiplier": 6.0,
+      "forensic_logic": {
+        "primary_test": "What rights do you have if vendor indicates they won't or can't perform?",
+        "si_concern": "Vendor announces equipment is discontinued mid-project - what are your rights?",
+        "key_indicators": [
+          "No right to terminate for anticipatory breach",
+          "Must continue performance despite vendor repudiation",
+          "Force majeure extends to voluntary discontinuation"
+        ]
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Right to act immediately when vendor signals breach",
+      "si_impact": "Vendor says they're exiting the market; you can source elsewhere immediately"
+    },
+
+    {
+      "id": "UCC-2-601",
+      "citation": "6 Del. C. § 2-601",
+      "title": "Buyer's Rights on Improper Delivery",
+      "category": "DELIVERY_ACCEPTANCE",
+      "subsections": {
+        "2-601(a)": "If goods fail to conform to contract in any respect, buyer may reject the whole",
+        "2-601(b)": "Buyer may accept the whole",
+        "2-601(c)": "Buyer may accept any commercial unit or units and reject the rest"
+      },
+      "trigger_concepts": [
+        "reject", "rejection", "non-conforming", "does not conform",
+        "fails to conform", "defective delivery", "wrong goods",
+        "partial shipment", "short shipment", "wrong quantity"
+      ],
+      "risk_multiplier": 6.0,
+      "forensic_logic": {
+        "primary_test": "Can you reject non-conforming equipment, or must you accept and sue?",
+        "si_concern": "If conveyor arrives damaged, can you reject or must you accept and repair?",
+        "key_indicators": [
+          "Waiver of right to reject",
+          "Must accept with price adjustment only",
+          "Limited inspection period",
+          "Acceptance upon delivery"
+        ]
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Right to reject defective goods entirely",
+      "si_impact": "Robot arrives non-functional; rejection right lets you refuse and source elsewhere"
+    },
+
+    {
+      "id": "UCC-2-606",
+      "citation": "6 Del. C. § 2-606",
+      "title": "What Constitutes Acceptance of Goods",
+      "category": "DELIVERY_ACCEPTANCE",
+      "subsections": {
+        "2-606(1)(a)": "Acceptance occurs when buyer after reasonable opportunity to inspect signifies goods are conforming or will take despite non-conformity",
+        "2-606(1)(b)": "Acceptance occurs when buyer fails to make effective rejection after reasonable opportunity to inspect",
+        "2-606(1)(c)": "Acceptance occurs when buyer does any act inconsistent with seller's ownership"
+      },
+      "trigger_concepts": [
+        "acceptance", "deemed accepted", "acceptance upon delivery",
+        "acceptance upon installation", "acceptance upon use",
+        "inspection period", "acceptance period", "sign-off"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "When does acceptance occur? How much time do you have to inspect?",
+        "si_concern": "Equipment installed in client's facility may trigger acceptance before full testing",
+        "key_indicators": [
+          "Acceptance upon delivery (not installation)",
+          "Short inspection period (< 30 days)",
+          "Deemed acceptance clause",
+          "Installation = acceptance",
+          "Payment = acceptance"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Once accepted, rejection rights are lost",
+      "si_impact": "Conveyor installed, then discovered defective; acceptance locks you in"
+    },
+
+    {
+      "id": "UCC-2-607",
+      "citation": "6 Del. C. § 2-607",
+      "title": "Effect of Acceptance; Notice of Breach",
+      "category": "DELIVERY_ACCEPTANCE",
+      "subsections": {
+        "2-607(2)": "Acceptance of goods by buyer precludes rejection of goods accepted",
+        "2-607(3)(a)": "Buyer must notify seller of breach within reasonable time after discovery or be barred from remedy"
+      },
+      "trigger_concepts": [
+        "notice of breach", "notify within", "reasonable time",
+        "discovery of defect", "notice period", "claim period",
+        "written notice", "breach notification"
+      ],
+      "risk_multiplier": 6.0,
+      "forensic_logic": {
+        "primary_test": "What notice must you give and when to preserve your claims?",
+        "si_concern": "Defect discovered 6 months after installation - did you notify in time?",
+        "key_indicators": [
+          "Short notice period (< 30 days)",
+          "Notice in writing required",
+          "Specific notice format required",
+          "Notice to specific person/address required"
+        ]
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Late notice = lost remedy",
+      "si_impact": "Defect discovered, but notice 5 days late = no warranty claim"
+    },
+
+    {
+      "id": "UCC-2-608",
+      "citation": "6 Del. C. § 2-608",
+      "title": "Revocation of Acceptance",
+      "category": "DELIVERY_ACCEPTANCE",
+      "subsections": {
+        "2-608(1)(a)": "Buyer may revoke acceptance if non-conformity substantially impairs value and acceptance was on reasonable assumption non-conformity would be cured and has not been",
+        "2-608(1)(b)": "Buyer may revoke acceptance if non-conformity substantially impairs value and acceptance was without discovery of non-conformity due to difficulty of discovery or seller's assurances",
+        "2-608(2)": "Revocation must occur within reasonable time after buyer discovers or should have discovered grounds"
+      },
+      "trigger_concepts": [
+        "revoke acceptance", "revocation", "return", "rescind",
+        "substantially impairs", "cure failure", "latent defect",
+        "hidden defect", "concealed defect"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "Can you return equipment if latent defect substantially impairs value?",
+        "si_concern": "Equipment accepted, then major defect found - can you revoke?",
+        "key_indicators": [
+          "Waiver of revocation rights",
+          "No return after acceptance",
+          "Repair only remedy",
+          "Time limit on revocation"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Safety valve for latent defects discovered post-acceptance",
+      "si_impact": "Conveyor accepted, then motor design flaw discovered; revocation lets you return"
+    },
+
+    {
+      "id": "UCC-2-615",
+      "citation": "6 Del. C. § 2-615",
+      "title": "Excuse by Failure of Presupposed Conditions",
+      "category": "FORCE_MAJEURE",
+      "subsections": {
+        "2-615(a)": "Delay or non-delivery not breach if performance made impracticable by occurrence of contingency non-occurrence of which was basic assumption",
+        "2-615(b)": "If only part of capacity affected, seller must allocate production fairly among customers",
+        "2-615(c)": "Seller must seasonably notify buyer of delay or non-delivery"
+      },
+      "trigger_concepts": [
+        "force majeure", "act of god", "impracticable", "impossible",
+        "beyond control", "unforeseeable", "epidemic", "pandemic",
+        "government action", "supply chain", "allocation", "shortage"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "When can vendor be excused from performance? Is it narrowly defined?",
+        "si_concern": "If vendor claims force majeure, are you also excused to your client?",
+        "key_indicators": [
+          "Broad force majeure definition",
+          "No allocation requirement",
+          "Extended or indefinite excuse period",
+          "No mitigation requirement",
+          "Force majeure doesn't flow down to your client contract"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Vendor escapes performance for unforeseeable events",
+      "si_impact": "Vendor claims chip shortage = FM excuse; your client contract has no FM clause = your liability"
+    },
+
+    {
+      "id": "SI-001",
+      "citation": "Common Law",
+      "title": "Warranty Flow-Down Gap",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "Vendor warranty period shorter than client warranty creates unprotected exposure window"
+      },
+      "trigger_concepts": [
+        "warranty period", "warranty term", "months warranty", "year warranty",
+        "warranty duration", "warranty expires", "warranty commences"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Is vendor warranty period >= client warranty period?",
+        "si_concern": "You warrant to client for 24 months; vendor warrants to you for 12 months = 12 months unprotected",
+        "key_indicators": [
+          "Vendor warranty < 12 months",
+          "Client warranty > vendor warranty",
+          "No extended warranty available",
+          "Warranty starts at ship (not installation)"
+        ],
+        "calculation": "Gap = Client_Warranty_Months - Vendor_Warranty_Months"
+      },
+      "severity": "CRITICAL",
+      "business_impact": "Warranty claims in gap period are 100% your liability",
+      "si_impact": "Client claims warranty at month 18; vendor warranty expired at month 12 = your cost"
+    },
+
+    {
+      "id": "SI-002",
+      "citation": "Common Law",
+      "title": "Liability Cap Squeeze",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "Vendor liability cap lower than your client liability exposure creates uninsured gap"
+      },
+      "trigger_concepts": [
+        "liability cap", "limitation of liability", "cap at", "limited to",
+        "aggregate liability", "maximum liability", "total liability",
+        "not exceed", "ceiling"
+      ],
+      "risk_multiplier": 9.0,
+      "forensic_logic": {
+        "primary_test": "Is vendor liability cap >= your client liability exposure?",
+        "si_concern": "Client can claim $5M from you; vendor cap is $500K = $4.5M unrecoverable",
+        "key_indicators": [
+          "Vendor cap is % of contract value",
+          "Vendor cap < client cap",
+          "No insurance carve-out",
+          "Consequential damages excluded"
+        ],
+        "calculation": "Gap = Client_Cap - Vendor_Cap"
+      },
+      "severity": "CRITICAL",
+      "business_impact": "Liability exposure beyond recovery from vendor",
+      "si_impact": "You owe client $2M; vendor cap is $200K; you absorb $1.8M"
+    },
+
+    {
+      "id": "SI-003",
+      "citation": "Common Law",
+      "title": "Indemnification Asymmetry",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "You indemnify client for vendor issues, but vendor won't indemnify you"
+      },
+      "trigger_concepts": [
+        "indemnify", "hold harmless", "defend", "indemnification",
+        "third party claims", "IP indemnity", "infringement indemnity",
+        "mutual indemnification", "one-way indemnification"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Does vendor indemnify you for same things you indemnify client?",
+        "si_concern": "You indemnify client for IP infringement; vendor provides no IP indemnity = your exposure",
+        "key_indicators": [
+          "One-way indemnification favoring vendor",
+          "No IP indemnification from vendor",
+          "Indemnification limited to gross negligence",
+          "Your indemnification is broader than vendor's"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Pass-through liability without pass-through protection",
+      "si_impact": "Client sues you for patent infringement; vendor provides no defense or indemnity"
+    },
+
+    {
+      "id": "SI-004",
+      "citation": "Common Law",
+      "title": "IP Ownership Grab",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "Contract assigns your integration IP to client or vendor without license back"
+      },
+      "trigger_concepts": [
+        "work for hire", "assign", "assignment", "transfer", "ownership",
+        "intellectual property", "IP rights", "all rights", "exclusive rights",
+        "deliverables", "work product", "custom development"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "Who owns the integration work product? Do you retain rights to your methodology?",
+        "si_concern": "Client claims ownership of your integration methodology, blocking reuse",
+        "key_indicators": [
+          "Work for hire language",
+          "Assignment of all IP",
+          "No license back",
+          "No pre-existing IP carve-out",
+          "Deliverables include methodologies"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Loss of reusable intellectual property",
+      "si_impact": "Integration approach you developed becomes client's exclusive property"
+    },
+
+    {
+      "id": "SI-005",
+      "citation": "Common Law",
+      "title": "Acceptance Trap",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "Vague or impossible acceptance criteria combined with payment holdback creates never-ending project"
+      },
+      "trigger_concepts": [
+        "acceptance", "acceptance criteria", "acceptance test", "final acceptance",
+        "substantial completion", "punch list", "retainage", "holdback",
+        "satisfactory to client", "client satisfaction", "sole discretion"
+      ],
+      "risk_multiplier": 8.0,
+      "forensic_logic": {
+        "primary_test": "Are acceptance criteria objectively measurable? Is there deemed acceptance?",
+        "si_concern": "Client withholds final payment claiming 'not accepted' with subjective criteria",
+        "key_indicators": [
+          "Subjective acceptance criteria ('satisfaction')",
+          "No deemed acceptance clause",
+          "No acceptance timeline",
+          "High retainage (> 10%)",
+          "Acceptance tied to client's client acceptance"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Payment indefinitely withheld pending subjective acceptance",
+      "si_impact": "System works perfectly but client won't sign acceptance = 20% retainage held indefinitely"
+    },
+
+    {
+      "id": "SI-006",
+      "citation": "Common Law",
+      "title": "Change Order Lockout",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "Restrictive change order process makes getting paid for extra work nearly impossible"
+      },
+      "trigger_concepts": [
+        "change order", "change request", "out of scope", "additional work",
+        "scope change", "modification", "amendment", "extra work",
+        "prior written approval", "signed change order"
+      ],
+      "risk_multiplier": 7.0,
+      "forensic_logic": {
+        "primary_test": "Can you get paid for out-of-scope work requested verbally?",
+        "si_concern": "Client directs extra work, refuses to sign change order, won't pay",
+        "key_indicators": [
+          "No work without signed change order",
+          "No constructive change clause",
+          "Client can direct changes without price adjustment",
+          "Change order requires multiple approvals"
+        ]
+      },
+      "severity": "HIGH",
+      "business_impact": "Unpaid scope creep",
+      "si_impact": "Client directs $200K of extra work verbally; no signed CO = no payment"
+    },
+
+    {
+      "id": "SI-007",
+      "citation": "Common Law",
+      "title": "Performance Guarantee Pass-Through Failure",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "You guarantee system performance dependent on vendor equipment without matching vendor guarantee"
+      },
+      "trigger_concepts": [
+        "throughput", "performance guarantee", "uptime", "availability",
+        "SLA", "service level", "performance standard", "system performance",
+        "guaranteed", "warrant performance", "performance bond"
+      ],
+      "risk_multiplier": 9.0,
+      "forensic_logic": {
+        "primary_test": "Are your performance guarantees to client backed by vendor guarantees?",
+        "si_concern": "You guarantee 99.5% uptime; vendor warrants 'commercially reasonable efforts' = gap",
+        "key_indicators": [
+          "You guarantee specific metrics",
+          "Vendor doesn't guarantee same metrics",
+          "Performance LD in client contract",
+          "No performance LD in vendor contract"
+        ]
+      },
+      "severity": "CRITICAL",
+      "business_impact": "Performance liability without recourse",
+      "si_impact": "System achieves 97% uptime; client claims $500K LD; vendor has no LD = your loss"
+    },
+
+    {
+      "id": "SI-008",
+      "citation": "Common Law",
+      "title": "Insurance Gap",
+      "category": "SI_PATTERN",
+      "subsections": {
+        "description": "Liability exposure exceeds insurance coverage or vendor has insufficient coverage"
+      },
+      "trigger_concepts": [
+        "insurance", "coverage", "policy", "certificate", "COI",
+        "professional liability", "E&O", "general liability", "umbrella",
+        "additional insured", "waiver of subrogation"
+      ],
+      "risk_multiplier": 6.0,
+      "forensic_logic": {
+        "primary_test": "Is total liability exposure covered by insurance (yours + vendor's)?",
+        "si_concern": "Contract liability exceeds your coverage; vendor won't add you as additional insured",
+        "key_indicators": [
+          "Liability cap exceeds insurance limit",
+          "No professional liability requirement for vendor",
+          "Not named as additional insured on vendor policy",
+          "No waiver of subrogation"
+        ]
+      },
+      "severity": "MEDIUM",
+      "business_impact": "Uninsured liability exposure",
+      "si_impact": "Claim exceeds your $5M coverage; vendor has only $1M = $4M uninsured"
+    }
+  ],
+
+  "cascade_patterns": [
+    {
+      "id": "CASCADE-001",
+      "name": "The Prepayment Trap",
+      "description": "Mandatory prepayment combined with restricted withholding creates illusory remedy",
+      "components": [
+        { "section": "Payment Terms", "element": "Mandatory prepayment >$5,000" },
+        { "section": "Payment Terms", "element": "Withholding restricted to documented SOW criteria" },
+        { "section": "Termination", "element": "Termination requires cure period exceeding prepayment consumption" }
+      ],
+      "statutory_violation": "UCC-2-719(2)",
+      "combined_risk": 10.0,
+      "remediation": "Add escrow mechanism or milestone-based release for prepaid amounts"
+    },
+    {
+      "id": "CASCADE-002",
+      "name": "The Indemnification Collapse",
+      "description": "Elevated negligence standard combined with no set-off eliminates practical recovery",
+      "components": [
+        { "section": "Indemnification", "element": "Limited to gross negligence" },
+        { "section": "Payment Terms", "element": "No deduction or set-off permitted" },
+        { "section": "Limitation of Liability", "element": "Cap below anticipated damages" }
+      ],
+      "statutory_violation": "UCC-2-302",
+      "combined_risk": 9.0,
+      "remediation": "Restore ordinary negligence standard or add carve-outs"
+    },
+    {
+      "id": "CASCADE-003",
+      "name": "The Remedy Veto",
+      "description": "Cumulative limitations that collectively eliminate all meaningful remedies",
+      "components": [
+        { "section": "Remedies", "element": "Exclusive remedy clause" },
+        { "section": "Damages", "element": "Consequential damages waiver" },
+        { "section": "Limitation of Liability", "element": "Cap at fees paid" },
+        { "section": "Termination", "element": "No termination for convenience" }
+      ],
+      "statutory_violation": "UCC-2-719(2)",
+      "combined_risk": 10.0,
+      "remediation": "Add UCC preservation clause for failure of essential purpose"
+    },
+    {
+      "id": "CASCADE-004",
+      "name": "The Warranty Gap",
+      "description": "Vendor warranty shorter than client warranty creates unprotected window",
+      "components": [
+        { "section": "Client Contract", "element": "Warranty period 24 months" },
+        { "section": "Vendor Contract", "element": "Warranty period 12 months or less" },
+        { "section": "Vendor Contract", "element": "No extended warranty option" }
+      ],
+      "statutory_violation": "SI-001",
+      "combined_risk": 8.0,
+      "remediation": "Negotiate vendor warranty >= client warranty, or purchase extended warranty"
+    },
+    {
+      "id": "CASCADE-005",
+      "name": "The Liability Squeeze",
+      "description": "Vendor liability cap lower than client exposure creates unrecoverable gap",
+      "components": [
+        { "section": "Client Contract", "element": "Liability cap $5M or unlimited" },
+        { "section": "Vendor Contract", "element": "Liability cap < $1M or % of contract" },
+        { "section": "Insurance", "element": "No carve-out for insured claims" }
+      ],
+      "statutory_violation": "SI-002",
+      "combined_risk": 9.0,
+      "remediation": "Negotiate vendor cap matching client exposure, or add insurance carve-out"
+    },
+    {
+      "id": "CASCADE-006",
+      "name": "The Acceptance Trap",
+      "description": "Vague acceptance criteria combined with high retainage creates indefinite payment hold",
+      "components": [
+        { "section": "Acceptance", "element": "Subjective acceptance criteria" },
+        { "section": "Payment", "element": "Retainage > 10%" },
+        { "section": "Acceptance", "element": "No deemed acceptance clause" }
+      ],
+      "statutory_violation": "SI-005",
+      "combined_risk": 8.0,
+      "remediation": "Add objective acceptance criteria, deemed acceptance after 30 days, reduce retainage"
+    },
+    {
+      "id": "CASCADE-007",
+      "name": "The IP Grab",
+      "description": "Work for hire combined with no license back eliminates reuse of your methodology",
+      "components": [
+        { "section": "IP", "element": "Work for hire language" },
+        { "section": "IP", "element": "Assignment of all deliverables" },
+        { "section": "IP", "element": "No pre-existing IP carve-out" },
+        { "section": "IP", "element": "No license back for internal use" }
+      ],
+      "statutory_violation": "SI-004",
+      "combined_risk": 7.0,
+      "remediation": "Add pre-existing IP carve-out, perpetual license back for methodologies"
+    },
+    {
+      "id": "CASCADE-008",
+      "name": "The Change Order Lockout",
+      "description": "Strict change order requirements combined with client direction creates unpaid work",
+      "components": [
+        { "section": "Changes", "element": "No work without signed change order" },
+        { "section": "Changes", "element": "No constructive change clause" },
+        { "section": "Scope", "element": "Client can direct work pending approval" }
+      ],
+      "statutory_violation": "SI-006",
+      "combined_risk": 7.0,
+      "remediation": "Add constructive change clause, automatic price adjustment for directed changes"
+    },
+    {
+      "id": "CASCADE-009",
+      "name": "The Performance Guarantee Gap",
+      "description": "System performance guarantee without matching vendor equipment guarantee",
+      "components": [
+        { "section": "Client Contract", "element": "Throughput/uptime guarantee" },
+        { "section": "Client Contract", "element": "Performance liquidated damages" },
+        { "section": "Vendor Contract", "element": "No matching performance guarantee" },
+        { "section": "Vendor Contract", "element": "No LD for performance failure" }
+      ],
+      "statutory_violation": "SI-007",
+      "combined_risk": 9.0,
+      "remediation": "Negotiate vendor performance guarantee matching client requirements, or LD flow-down"
+    },
+    {
+      "id": "CASCADE-010",
+      "name": "The Force Majeure Gap",
+      "description": "Vendor has broad FM excuse but you have narrow or no FM protection to client",
+      "components": [
+        { "section": "Vendor Contract", "element": "Broad force majeure clause" },
+        { "section": "Vendor Contract", "element": "Extended or indefinite FM period" },
+        { "section": "Client Contract", "element": "Narrow or no force majeure clause" },
+        { "section": "Client Contract", "element": "LD continues during FM" }
+      ],
+      "statutory_violation": "UCC-2-615",
+      "combined_risk": 8.0,
+      "remediation": "Add FM flow-through to client contract, or require vendor FM to excuse your client obligations"
+    },
+    {
+      "id": "CASCADE-011",
+      "name": "The Battle of Forms Trap",
+      "description": "Your PO terms overwritten by vendor acknowledgment terms through silence",
+      "components": [
+        { "section": "PO", "element": "Your warranty/liability terms" },
+        { "section": "Acknowledgment", "element": "Vendor's different terms" },
+        { "section": "PO", "element": "No 'terms prevail' clause" },
+        { "section": "Process", "element": "No objection to acknowledgment" }
+      ],
+      "statutory_violation": "UCC-2-207",
+      "combined_risk": 7.0,
+      "remediation": "Add 'PO terms prevail' clause, require written objection to all vendor modifications"
+    },
+    {
+      "id": "CASCADE-012",
+      "name": "The Warranty Disclaimer Bypass",
+      "description": "Vendor disclaims warranties but disclaimer may be unenforceable",
+      "components": [
+        { "section": "Warranty", "element": "AS IS or disclaimer language" },
+        { "section": "Warranty", "element": "Disclaimer not conspicuous" },
+        { "section": "Warranty", "element": "Merchantability not specifically mentioned" },
+        { "section": "Warranty", "element": "Disclaimer buried in terms" }
+      ],
+      "statutory_violation": "UCC-2-316",
+      "combined_risk": 6.0,
+      "remediation": "Challenge validity of disclaimer; may have warranty rights despite contract language"
+    }
+  ],
+
+  "keyword_severity_map": {
+    "critical_10": [
+      "gross negligence", "willful misconduct", "full prepayment", "non-refundable",
+      "sole remedy", "exclusive remedy", "failure of essential purpose",
+      "unconscionable", "no liability whatsoever", "absolute discretion",
+      "as is", "with all faults", "no warranties", "all risk"
+    ],
+    "high_8": [
+      "indemnify", "hold harmless", "withhold", "restricted", "mandatory",
+      "no set-off", "no deduction", "limited to", "cap at", "waive",
+      "disclaim", "merchantability", "fitness", "exclude", "AS IS",
+      "work for hire", "assign all", "exclusive rights"
+    ],
+    "medium_5": [
+      "liquidated damages", "termination fee", "notice period", "cure period",
+      "limitation period", "claims must be made within", "acceptance",
+      "retainage", "holdback", "milestone", "deemed accepted"
+    ],
+    "low_1": [
+      "reasonable efforts", "commercially reasonable", "mutual agreement",
+      "good faith", "both parties", "negotiate in good faith"
+    ]
+  },
+
+  "boilerplate_redlines": {
+    "prepayment_escrow": "All prepaid amounts exceeding $5,000 shall be held in joint escrow and released only upon Client's written acceptance of deliverables.",
+    "defined_acceptance": "Acceptance criteria for all deliverables shall be documented in Exhibit A prior to any prepayment. General quality standards (industry best practices, workmanlike manner, fitness for purpose) shall apply in absence of specific criteria.",
+    "ucc_preservation": "Nothing in this Agreement shall be construed to limit Client's remedies under the Delaware Uniform Commercial Code § 2-719 if any limited remedy fails of its essential purpose.",
+    "ordinary_negligence_carveout": "Notwithstanding the foregoing, Vendor shall indemnify Client for losses arising from Vendor's ordinary negligence to the extent covered by Vendor's commercial general liability insurance.",
+    "setoff_rights": "Client may deduct from amounts due any damages resulting from Vendor's breach, upon written notice to Vendor specifying the breach and damages claimed.",
+    "warranty_flowdown": "Vendor warrants that all warranties provided hereunder shall extend for a period no less than [CLIENT WARRANTY PERIOD] from final system acceptance by Client's end customer.",
+    "liability_cap_match": "Vendor's aggregate liability under this Agreement shall not be less than the aggregate liability cap in Client's end customer contract, or $[AMOUNT], whichever is greater.",
+    "ip_carveout": "Notwithstanding any assignment provisions, Client's pre-existing intellectual property, methodologies, tools, and know-how shall remain Client's exclusive property, with a perpetual license to end customer for use with the delivered system only.",
+    "deemed_acceptance": "If end customer fails to provide written notice of non-conformance within [30] days of substantial completion, the deliverables shall be deemed accepted.",
+    "constructive_change": "If end customer directs work outside the original scope, Client may proceed with such work and shall be entitled to equitable adjustment in price and schedule, whether or not a formal change order is executed.",
+    "performance_flowdown": "Vendor warrants that equipment shall meet or exceed the performance specifications in Exhibit B, which specifications are derived from Client's commitments to end customer.",
+    "fm_flowdown": "Any force majeure event excusing Vendor's performance shall automatically excuse Client's corresponding obligations to its end customer. Vendor's force majeure shall not apply to payment obligations."
+  }
+}

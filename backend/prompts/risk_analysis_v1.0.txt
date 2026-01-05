@@ -1,0 +1,29 @@
+You are a contract risk analyst. Analyze the following clause for risks.
+
+CLAUSE TYPE: {clause_type}
+SECTION: {section_number}
+TEXT:
+{clause_text}
+
+Evaluate and respond with ONLY a JSON object (no other text):
+{
+  "severity": <1-10 integer>,
+  "complexity": <1-10 integer>,
+  "impact": <1-10 integer>,
+  "risk_factors": ["factor1", "factor2"],
+  "statutory_concern": "<UCC citation or null>",
+  "recommendation": "<brief recommendation>"
+}
+
+SCORING GUIDANCE:
+- Severity 10: Gross negligence waivers, full prepayment with no recourse
+- Severity 8: Indemnification limitations, liability caps below expected damages
+- Severity 5: Standard commercial terms with some one-sidedness
+- Severity 1: Balanced mutual terms
+
+- Impact 10: Creates statutory violation (UCC § 2-719, § 2-302)
+- Impact 8: Eliminates meaningful remedy
+- Impact 5: Shifts risk but preserves some recourse
+- Impact 1: Minimal business impact
+
+Respond with JSON only.

@@ -1,16 +1,33 @@
 """
-CIP Redline Reviews Page v1.0
+CIP Redline Reviews Page v2.0 - CCE-Plus Integration
 Side-by-side clause review workflow for QA/QC of AI-suggested contract revisions.
+- CCE-Plus: Workflow gate enforcement (requires risk analysis complete)
+- CCE-Plus: Deterministic report generation with audit trail
 """
 
 import streamlit as st
 import requests
 import json
 import re
+import os
 from datetime import datetime
 from typing import Dict, List, Optional
+import sys
+from pathlib import Path
+
+# Add backend to path
+backend_path = Path(__file__).parent.parent.parent / "backend"
+sys.path.insert(0, str(backend_path))
 
 from components.page_wrapper import init_page, page_header, content_container
+
+# Import CCE-Plus modules
+try:
+    from workflow_gates import WorkflowGate
+    from report_generator import ReportGenerator
+    WORKFLOW_GATES_AVAILABLE = True
+except ImportError:
+    WORKFLOW_GATES_AVAILABLE = False
 
 # ============================================================================
 # CONFIGURATION
@@ -105,6 +122,78 @@ def api_save_redline(contract_id: int, decisions: list, risk_before: str) -> Dic
         return response.json()
     except Exception as e:
         return {'error': str(e)}
+
+
+# ============================================================================
+# WORKFLOW GATE & REPORT HELPERS
+# ============================================================================
+
+def check_workflow_gate(contract_id: int) -> tuple[bool, str]:
+    """
+    Check if redline review can be started for this contract.
+
+    Returns:
+        (can_proceed: bool, message: str)
+    """
+    if not WORKFLOW_GATES_AVAILABLE:
+        return True, ""  # Graceful degradation
+
+    try:
+        db_path = str(backend_path.parent / "data" / "contracts.db")
+        gate = WorkflowGate(db_path)
+        can_proceed, msg = gate.can_start_redlines(contract_id)
+        return can_proceed, msg
+    except Exception as e:
+        return False, f"Error checking workflow gate: {e}"
+
+
+def advance_workflow_after_approval(contract_id: int) -> bool:
+    """
+    Advance workflow after redline approval.
+    Marks risk complete and unlocks compare stage.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    if not WORKFLOW_GATES_AVAILABLE:
+        return True  # Graceful degradation
+
+    try:
+        db_path = str(backend_path.parent / "data" / "contracts.db")
+        gate = WorkflowGate(db_path)
+        # Mark risk complete and unlock redlines
+        success = gate.advance_stage(contract_id, 'risk')
+        if success:
+            # Redlines approved, unlock compare
+            gate.advance_stage(contract_id, 'redline')
+            return True
+        return False
+    except Exception:
+        return False
+
+
+def generate_redline_report(contract_id: int) -> tuple[str, str]:
+    """
+    Generate deterministic redline report.
+
+    Returns:
+        (report_content: str, report_id: str)
+    """
+    if not WORKFLOW_GATES_AVAILABLE:
+        return "Report generation not available (modules not loaded)", "N/A"
+
+    try:
+        db_path = str(backend_path.parent / "data" / "contracts.db")
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+
+        if not api_key:
+            return "Error: ANTHROPIC_API_KEY not set", "N/A"
+
+        generator = ReportGenerator(db_path, api_key)
+        report, report_id = generator.generate_redline_report(contract_id)
+        return report, report_id
+    except Exception as e:
+        return f"Error generating report: {e}", "N/A"
 
 
 # ============================================================================
@@ -265,7 +354,7 @@ def clean_redline_for_edit(text: str) -> str:
 # ============================================================================
 
 def render_contract_selector():
-    """Render dropdown + load buttons."""
+    """Render dropdown + load buttons with workflow gate checks."""
     contracts = api_get_contracts()
 
     col1, col2, col3 = st.columns([2, 1, 1])
@@ -286,12 +375,20 @@ def render_contract_selector():
             st.session_state["rdl_contract_id"] = contract_id
             st.session_state["rdl_contract_title"] = selected.split(": ", 1)[1] if ": " in selected else ""
 
+    # Check workflow gate for selected contract
+    contract_id = st.session_state.get("rdl_contract_id")
+    can_proceed = True
+    gate_message = ""
+    if contract_id:
+        can_proceed, gate_message = check_workflow_gate(contract_id)
+
     with col2:
         risk_findings_available = bool(st.session_state.get("risk_findings", []))
+        btn_disabled = not risk_findings_available or not can_proceed
         if st.button(
             "Load from Analysis",
             key="rdl_load_analysis",
-            disabled=not risk_findings_available,
+            disabled=btn_disabled,
             use_container_width=True
         ):
             findings = load_findings_from_risk_analysis()
@@ -304,16 +401,16 @@ def render_contract_selector():
                 st.rerun()
 
     with col3:
-        contract_selected = st.session_state.get("rdl_contract_id") is not None
+        contract_selected = contract_id is not None
+        btn_disabled = not contract_selected or not can_proceed
         if st.button(
             "Run Fresh Scan",
             key="rdl_fresh_scan",
-            disabled=not contract_selected,
+            disabled=btn_disabled,
             type="primary",
             use_container_width=True
         ):
             st.session_state["rdl_loading"] = True
-            contract_id = st.session_state.get("rdl_contract_id")
             with st.spinner("Running analysis..."):
                 findings = load_findings_fresh(contract_id)
             st.session_state["rdl_loading"] = False
@@ -324,6 +421,10 @@ def render_contract_selector():
                 st.session_state["rdl_source"] = "fresh"
                 st.session_state["rdl_error"] = None
             st.rerun()
+
+    # Show gate warning if blocked
+    if contract_id and not can_proceed:
+        st.warning(f"🔒 {gate_message}")
 
     # Show error if any
     if st.session_state.get("rdl_error"):
@@ -582,12 +683,12 @@ def render_navigation(index: int, total: int):
 
 
 def render_progress_bar():
-    """Render stats + Export button."""
+    """Render stats + Export + Report buttons."""
     stats = get_progress_stats()
 
     st.divider()
 
-    col_a, col_r, col_m, col_p, col_export = st.columns([1, 1, 1, 1, 1])
+    col_a, col_r, col_m, col_p, col_export, col_report = st.columns([1, 1, 1, 1, 1, 1])
 
     with col_a:
         st.metric("Accepted", stats['accepted'])
@@ -607,6 +708,15 @@ def render_progress_bar():
             key="rdl_download",
             use_container_width=True
         )
+    with col_report:
+        contract_id = st.session_state.get("rdl_contract_id")
+        if st.button("📊 Generate Report", key="rdl_generate_report", use_container_width=True, disabled=not contract_id):
+            if contract_id:
+                with st.spinner("Generating deterministic report..."):
+                    report, report_id = generate_redline_report(contract_id)
+                    st.session_state["rdl_report"] = report
+                    st.session_state["rdl_report_id"] = report_id
+                st.rerun()
 
     # Check if review is complete
     pending_count = stats.get("pending", 0)
@@ -626,7 +736,7 @@ def render_progress_bar():
                 findings = st.session_state.get("rdl_findings", [])
                 contract_id = st.session_state.get("rdl_contract_id")
                 risk_before = st.session_state.get("rdl_overall_risk", "")
-                
+
                 # Format decisions for API
                 decision_list = []
                 for idx, dec in decisions.items():
@@ -639,12 +749,17 @@ def render_progress_bar():
                         'section': finding.get('section_number', ''),
                         'category': finding.get('category', '')
                     })
-                
+
                 result = api_save_redline(contract_id, decision_list, risk_before)
                 if 'error' in result:
                     st.error(f"Save failed: {result['error']}")
                 else:
                     st.success(f"Saved! Redline ID: {result.get('redline_id')}")
+
+                    # Advance workflow to unlock compare stage
+                    if advance_workflow_after_approval(contract_id):
+                        st.success("✅ Workflow advanced: Compare stage unlocked")
+
                     st.session_state["rdl_saved"] = True
                     st.rerun()
         
@@ -740,7 +855,7 @@ init_page("Redline Reviews", "📝", max_width=1400)
 
 page_header(
     "Redline Reviews",
-    subtitle="Review and approve AI-suggested contract revisions",
+    subtitle="Review and approve AI-suggested contract revisions with CCE-Plus deterministic reports",
     show_status=True,
     show_version=True
 )
@@ -788,3 +903,24 @@ with content_container():
 
             # Progress bar with Save button
             render_progress_bar()
+
+            # Display generated report if available
+            if st.session_state.get("rdl_report"):
+                st.markdown("---")
+                st.markdown("### 📊 Generated Redline Report")
+                report_id = st.session_state.get("rdl_report_id", "N/A")
+                st.caption(f"Report ID: {report_id} (reproducible)")
+
+                with st.expander("View Report", expanded=True):
+                    report_content = st.session_state.get("rdl_report", "")
+                    st.markdown(report_content)
+
+                    # Download button for report
+                    st.download_button(
+                        label="Download Report (Markdown)",
+                        data=report_content,
+                        file_name=f"redline_report_{report_id}.md",
+                        mime="text/markdown",
+                        key="rdl_download_report",
+                        use_container_width=True
+                    )

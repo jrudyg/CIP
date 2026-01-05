@@ -1,21 +1,34 @@
 # pages/2_Contracts_Portfolio.py
 """
-CIP Contracts Portfolio v3.1
+CIP Contracts Portfolio v4.0 - CCE-Plus Integration
 - Compact view with checkboxes
-- Multi-select with floating action bar: Delete (1+), Analyze (1), Compare (2), Link (2)
+- Multi-select with floating action bar (always visible): Delete (1+), View (1), Analyze (1), Compare (2), Link (2)
 - Filters: Role, Contract Type, Other Party
-- View and Delete buttons per row
+- CCE-Plus: Workflow gate status display (Intake → Risk → Redline → Compare)
 """
 
 import streamlit as st
 import requests
 from typing import Dict, List
+import sys
+from pathlib import Path
+
+# Add backend to path
+backend_path = Path(__file__).parent.parent.parent / "backend"
+sys.path.insert(0, str(backend_path))
 
 from components.page_wrapper import (
     init_page,
     page_header,
     content_container
 )
+
+# Import workflow gates
+try:
+    from workflow_gates import WorkflowGate
+    WORKFLOW_GATES_AVAILABLE = True
+except ImportError:
+    WORKFLOW_GATES_AVAILABLE = False
 
 # ============================================================================
 # CONFIGURATION
@@ -39,16 +52,72 @@ RISK_CONFIG = {
     "LOW": {"icon": "🟢", "color": "#22C55E", "bg": "rgba(34,197,94,0.15)"},
 }
 
-WORKFLOW_BADGES = {
-    0: "📥",  # Intake
-    1: "🔍",  # Analyzed
-    2: "✏️",  # Reviewed
-    3: "🤝",  # Negotiated
+# CCE-Plus Workflow Status Icons
+WORKFLOW_STATUS_ICONS = {
+    "COMPLETE": "✅",
+    "APPROVED": "✅",
+    "IN_PROGRESS": "⏳",
+    "PENDING": "🔓",
+    "BLOCKED": "🔒",
+    "REJECTED": "❌",
 }
 
-def get_workflow_badge(stage: int) -> str:
-    """Return emoji badge for workflow stage."""
-    return WORKFLOW_BADGES.get(stage, "📥")
+# ============================================================================
+# WORKFLOW GATE HELPER
+# ============================================================================
+
+def get_workflow_status_for_contract(contract_id: int) -> Dict:
+    """
+    Get workflow status for a contract from workflow gates.
+
+    Returns:
+        {
+            'intake': 'COMPLETE',
+            'risk': 'PENDING',
+            'redline': 'BLOCKED',
+            'compare': 'BLOCKED'
+        }
+    """
+    if not WORKFLOW_GATES_AVAILABLE:
+        return {
+            'intake': 'PENDING',
+            'risk': 'BLOCKED',
+            'redline': 'BLOCKED',
+            'compare': 'BLOCKED'
+        }
+
+    try:
+        db_path = str(backend_path.parent / "data" / "contracts.db")
+        gate = WorkflowGate(db_path)
+        status = gate.get_workflow_status(contract_id)
+
+        return {
+            'intake': status.get('intake', 'PENDING'),
+            'risk': status.get('risk', 'BLOCKED'),
+            'redline': status.get('redline', 'BLOCKED'),
+            'compare': status.get('compare', 'BLOCKED')
+        }
+    except Exception:
+        return {
+            'intake': 'PENDING',
+            'risk': 'BLOCKED',
+            'redline': 'BLOCKED',
+            'compare': 'BLOCKED'
+        }
+
+def format_workflow_badges(workflow_status: Dict) -> str:
+    """
+    Format workflow status as compact badge string.
+
+    Returns:
+        "✅ 🔓 🔒 🔒" (Intake complete, Risk pending, Redline/Compare blocked)
+    """
+    intake_icon = WORKFLOW_STATUS_ICONS.get(workflow_status.get('intake', 'BLOCKED'), '🔒')
+    risk_icon = WORKFLOW_STATUS_ICONS.get(workflow_status.get('risk', 'BLOCKED'), '🔒')
+    redline_icon = WORKFLOW_STATUS_ICONS.get(workflow_status.get('redline', 'BLOCKED'), '🔒')
+    compare_icon = WORKFLOW_STATUS_ICONS.get(workflow_status.get('compare', 'BLOCKED'), '🔒')
+
+    return f"{intake_icon} {risk_icon} {redline_icon} {compare_icon}"
 
 # ============================================================================
 # SESSION STATE
@@ -160,6 +229,7 @@ def filter_contracts(contracts: List[Dict]) -> List[Dict]:
 
     filtered.sort(key=lambda x: x.get("id", 0), reverse=True)
     return filtered
+
 # ============================================================================
 # SUMMARY STATS
 # ============================================================================
@@ -175,27 +245,27 @@ def calculate_summary(contracts: List[Dict]) -> Dict:
         "expired": 0,
         "archived": 0,
     }
-    
+
     for c in contracts:
         status = str(c.get("status", "")).lower()
         if status in summary:
             summary[status] += 1
-    
+
     return summary
 
 def render_summary(contracts: List[Dict]):
     """Render summary stats panel using native Streamlit."""
     summary = calculate_summary(contracts)
-    
+
     st.markdown("**Summary**")
-    
+
     # Total
     col1, col2 = st.columns([3, 1])
     with col1:
         st.caption("📄 Total")
     with col2:
         st.write(f"**{summary['total']}**")
-    
+
     # By status
     for status, cfg in STATUS_CONFIG.items():
         count = summary.get(status, 0)
@@ -323,7 +393,7 @@ def render_filters(filter_options: Dict, contracts: List[Dict]):
 # ============================================================================
 
 def render_floating_action_bar(filtered: List[Dict]):
-    """Render floating action bar based on selection count."""
+    """Render floating action bar - always visible, buttons enabled based on selection count."""
     selected_ids = st.session_state.get("pf_selected_ids", set())
     if not isinstance(selected_ids, set):
         selected_ids = set()
@@ -333,45 +403,66 @@ def render_floating_action_bar(filtered: List[Dict]):
     with col_info:
         st.markdown(f"**{count}** selected")
     with col_clear:
-        if st.button("Clear", key="clear_selection"):
-            clear_selection()
-            st.rerun()
-    if count >= 1:
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
+        if count > 0:
+            if st.button("Clear", key="clear_selection"):
+                clear_selection()
+                st.rerun()
+        else:
+            st.button("Clear", key="clear_selection_disabled", disabled=True)
+
+    # Action bar always visible - buttons enabled based on selection count
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+        if count >= 1:
             if st.button("🗑️ Delete", key="bulk_delete", use_container_width=True, type="primary"):
                 st.session_state["confirm_bulk_delete"] = True
                 st.rerun()
-        with col2:
-            if count == 1:
-                if st.button("🔍 Analyze", key="bulk_analyze", use_container_width=True):
-                    contract_id = list(selected_ids)[0]
-                    st.session_state["risk_selected_contract"] = contract_id
-                    st.session_state["risk_scanning"] = True
-                    st.session_state["risk_scan_contract"] = contract_id
-                    clear_selection()
-                    st.switch_page("pages/4_Risk_Analysis.py")
-            else:
-                st.button("🔍 Analyze", key="bulk_analyze_disabled", use_container_width=True, disabled=True, help="Select exactly 1 contract")
-        with col3:
-            if count == 2:
-                if st.button("⚖️ Compare", key="bulk_compare", use_container_width=True):
-                    ids = list(selected_ids)
-                    st.session_state["v1_id"] = ids[0]
-                    st.session_state["v2_id"] = ids[1]
-                    # Clear dropdown widget keys so they pick up new values
-                    st.session_state.pop("v1_selector_dropdown", None)
-                    st.session_state.pop("v2_selector_dropdown", None)
-                    clear_selection()
-                    st.switch_page("pages/6_Compare_Versions.py")
-            else:
-                st.button("⚖️ Compare", key="bulk_compare_disabled", use_container_width=True, disabled=True, help="Select exactly 2 contracts")
-        with col4:
-            if count == 2:
-                if st.button("🔗 Link", key="bulk_link", use_container_width=True):
-                    st.info("Link feature coming soon")
-            else:
-                st.button("🔗 Link", key="bulk_link_disabled", use_container_width=True, disabled=True, help="Select exactly 2 contracts")
+        else:
+            st.button("🗑️ Delete", key="bulk_delete_disabled", use_container_width=True, disabled=True, help="Select 1+ contracts")
+
+    with col2:
+        if count == 1:
+            if st.button("👁️ View", key="bulk_view", use_container_width=True):
+                contract_id = list(selected_ids)[0]
+                st.session_state["pf_selected_contract"] = contract_id
+                clear_selection()
+                st.switch_page("pages/9_Contract_Details.py")
+        else:
+            st.button("👁️ View", key="bulk_view_disabled", use_container_width=True, disabled=True, help="Select exactly 1 contract")
+
+    with col3:
+        if count == 1:
+            if st.button("🔍 Analyze", key="bulk_analyze", use_container_width=True):
+                contract_id = list(selected_ids)[0]
+                st.session_state["risk_selected_contract"] = contract_id
+                st.session_state["risk_scanning"] = True
+                st.session_state["risk_scan_contract"] = contract_id
+                clear_selection()
+                st.switch_page("pages/4_Risk_Analysis.py")
+        else:
+            st.button("🔍 Analyze", key="bulk_analyze_disabled", use_container_width=True, disabled=True, help="Select exactly 1 contract")
+
+    with col4:
+        if count == 2:
+            if st.button("⚖️ Compare", key="bulk_compare", use_container_width=True):
+                ids = list(selected_ids)
+                st.session_state["v1_id"] = ids[0]
+                st.session_state["v2_id"] = ids[1]
+                # Clear dropdown widget keys so they pick up new values
+                st.session_state.pop("v1_selector_dropdown", None)
+                st.session_state.pop("v2_selector_dropdown", None)
+                clear_selection()
+                st.switch_page("pages/6_Compare_Versions.py")
+        else:
+            st.button("⚖️ Compare", key="bulk_compare_disabled", use_container_width=True, disabled=True, help="Select exactly 2 contracts")
+
+    with col5:
+        if count == 2:
+            if st.button("🔗 Link", key="bulk_link", use_container_width=True):
+                st.info("Link feature coming soon")
+        else:
+            st.button("🔗 Link", key="bulk_link_disabled", use_container_width=True, disabled=True, help="Select exactly 2 contracts")
     if st.session_state.get("confirm_bulk_delete"):
         st.warning(f"Delete {count} contract{'s' if count != 1 else ''}?")
         conf_col1, conf_col2 = st.columns(2)
@@ -395,11 +486,11 @@ def render_floating_action_bar(filtered: List[Dict]):
                 st.rerun()
 
 # ============================================================================
-# CONTRACT ROWS - COMPACT VIEW WITH CHECKBOXES
+# CONTRACT ROWS - COMPACT VIEW WITH CHECKBOXES + WORKFLOW STATUS
 # ============================================================================
 
 def render_contract_row_compact(contract: Dict):
-    """Render compact contract row with checkbox, info, View and Delete."""
+    """Render compact contract row with checkbox, info, workflow status, View and Delete."""
     c = contract
     contract_id = c.get("id")
     status = str(c.get("status", "active")).lower()
@@ -413,13 +504,15 @@ def render_contract_row_compact(contract: Dict):
         selected_ids = set()
     is_selected = contract_id in selected_ids
     risk_icon = f" {risk_cfg['icon']}" if risk_cfg else ""
-    workflow_stage = c.get("workflow_stage", 0)
-    workflow_badge = get_workflow_badge(workflow_stage)
-    
-    col_check, col_status, col_info, col_view, col_delete = st.columns([0.5, 0.5, 4, 0.8, 0.8])
-    
+
+    # Get CCE-Plus workflow status
+    workflow_status = get_workflow_status_for_contract(contract_id)
+    workflow_badges = format_workflow_badges(workflow_status)
+
+    col_check, col_status, col_info, col_workflow = st.columns([0.5, 0.5, 3, 1])
+
     with col_check:
-        if st.checkbox("", value=is_selected, key=f"chk_{contract_id}", label_visibility="collapsed"):
+        if st.checkbox("Select", value=is_selected, key=f"chk_{contract_id}", label_visibility="collapsed"):
             if not is_selected:
                 toggle_selection(contract_id)
                 st.rerun()
@@ -430,16 +523,10 @@ def render_contract_row_compact(contract: Dict):
     with col_status:
         st.write(status_cfg['icon'])
     with col_info:
-        st.write(f"{workflow_badge} **{title}** · {counterparty}{risk_icon}")
-    with col_view:
-        if st.button("View", key=f"view_{contract_id}", use_container_width=True):
-            st.session_state["pf_selected_contract"] = contract_id
-            st.switch_page("pages/9_Contract_Details.py")
-    with col_delete:
-        if st.button("🗑️", key=f"del_{contract_id}", use_container_width=True, help="Delete"):
-            st.session_state[f"confirm_delete_{contract_id}"] = True
-            st.rerun()
-    
+        st.write(f"**{title}** · {counterparty}{risk_icon}")
+    with col_workflow:
+        st.caption(workflow_badges)
+
     if st.session_state.get(f"confirm_delete_{contract_id}"):
         st.warning(f"Delete contract #{contract_id}?")
         conf_col1, conf_col2 = st.columns(2)
@@ -469,6 +556,11 @@ def render_contracts_panel(contracts: List[Dict], filtered: List[Dict]):
         st.markdown(f"**Contracts** ({total})")
     else:
         st.markdown(f"**Contracts** ({showing} of {total})")
+
+    # Workflow legend
+    st.caption("Workflow: ✅ Complete | 🔓 Pending | 🔒 Blocked | ⏳ In Progress")
+    st.caption("Stages: Intake · Risk · Redline · Compare")
+
     render_floating_action_bar(filtered)
     if not filtered:
         if total == 0:
@@ -500,7 +592,7 @@ init_page("Contracts Portfolio", "📊", max_width=1400)
 
 page_header(
     "Contracts Portfolio",
-    subtitle="Manage and monitor your contract portfolio",
+    subtitle="Manage and monitor your contract portfolio with CCE-Plus workflow tracking",
     show_status=True,
     show_version=True
 )
@@ -511,12 +603,12 @@ with content_container():
     contracts = api_get_contracts()
     filter_options = get_filter_options(contracts)
     filtered = filter_contracts(contracts)
-    
+
     col_left, col_right = st.columns([1, 2.5])
-    
+
     with col_left:
         render_summary(contracts)
         render_filters(filter_options, contracts)
-    
+
     with col_right:
         render_contracts_panel(contracts, filtered)

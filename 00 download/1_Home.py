@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pages/1_Home.py
 """
 CIP Home Page v2.0

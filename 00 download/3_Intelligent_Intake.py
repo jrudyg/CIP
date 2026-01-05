@@ -1,12 +1,10 @@
 # pages/3_Intelligent_Intake.py
 """
-CIP Intelligent Intake v5.2 - CCE-Plus Integration
+CIP Intelligent Intake v5.1 - CCE-Plus Integration
 - Direct integration with intake_engine.py
 - Automated clause extraction and risk scoring
 - Workflow gate integration
 - Session state persistence for form stability
-- Cache clearing on new scan
-- Browser autocomplete prevention
 """
 
 import streamlit as st
@@ -16,7 +14,6 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 import tempfile
-import time
 
 # Add backend to path
 backend_path = Path(__file__).parent.parent.parent / "backend"
@@ -44,9 +41,6 @@ def init_intake_state():
         st.session_state.intake_db_path = None
     if 'intake_filename' not in st.session_state:
         st.session_state.intake_filename = None
-    if 'intake_form_key' not in st.session_state:
-        # Unique key prefix for form fields - prevents browser autocomplete
-        st.session_state.intake_form_key = int(time.time() * 1000)
 
 def clear_intake_state():
     """Clear intake session state for fresh start."""
@@ -54,14 +48,6 @@ def clear_intake_state():
     st.session_state.intake_processed = False
     st.session_state.intake_db_path = None
     st.session_state.intake_filename = None
-    # Generate new form key to prevent browser autocomplete
-    st.session_state.intake_form_key = int(time.time() * 1000)
-
-def clear_all_caches():
-    """Clear Streamlit caches to ensure fresh data."""
-    # Clear any cached functions
-    st.cache_data.clear()
-    st.cache_resource.clear()
 
 # Initialize state
 init_intake_state()
@@ -182,10 +168,6 @@ with content_container():
         # Process button
         if st.button("🚀 Process Contract", type="primary", use_container_width=True, key="btn_process"):
 
-            # CLEAR ALL STATE AND CACHES BEFORE NEW SCAN
-            clear_intake_state()
-            clear_all_caches()
-
             # Save to temporary file
             with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
                 tmp_file.write(uploaded_file.getbuffer())
@@ -217,7 +199,6 @@ with content_container():
                             st.session_state.intake_result = result
                             st.session_state.intake_processed = True
                             st.session_state.intake_db_path = db_path
-                            st.session_state.intake_filename = uploaded_file.name
 
                             # Trigger rerun to show form
                             st.rerun()
@@ -253,7 +234,6 @@ with content_container():
         result = st.session_state.intake_result
         metadata = result.metadata
         db_path = st.session_state.intake_db_path
-        form_key = st.session_state.intake_form_key  # Unique key for this scan
 
         # Show file info
         st.info(f"📄 File: **{st.session_state.intake_filename}**")
@@ -283,7 +263,6 @@ with content_container():
         st.info("Please verify and complete the extracted information:")
 
         # Editable fields with extracted values as defaults
-        # Using dynamic keys with form_key prefix to prevent browser autocomplete
         col_left, col_right = st.columns(2)
 
         with col_left:
@@ -291,22 +270,19 @@ with content_container():
                 "Party (Client)",
                 value=metadata.party_client or "",
                 help="The organization you represent",
-                key=f"form_{form_key}_party",
-                placeholder="Enter client name"
+                key="form_party"
             )
             counterparty = st.text_input(
                 "CounterParty (Vendor)",
                 value=metadata.party_vendor or "",
                 help="The other party to the contract",
-                key=f"form_{form_key}_counterparty",
-                placeholder="Enter vendor name"
+                key="form_counterparty"
             )
             governing_law = st.text_input(
                 "Governing Law",
                 value=metadata.governing_law or "",
                 help="Jurisdiction (e.g., Delaware, New York)",
-                key=f"form_{form_key}_governing_law",
-                placeholder="Enter jurisdiction"
+                key="form_governing_law"
             )
 
         with col_right:
@@ -317,7 +293,7 @@ with content_container():
                          "License Agreement", "Other"],
                 index=0,
                 help="Type of agreement",
-                key=f"form_{form_key}_contract_type"
+                key="form_contract_type"
             )
 
             purpose = st.selectbox(
@@ -327,7 +303,7 @@ with content_container():
                          "Maintenance", "Software", "Consulting", "Integration", "Other"],
                 index=0,
                 help="Primary purpose of the contract",
-                key=f"form_{form_key}_purpose"
+                key="form_purpose"
             )
 
             doc_relationship = st.selectbox(
@@ -336,7 +312,7 @@ with content_container():
                          "Renewal", "Supersedes", "Flow-Down", "Back-to-Back"],
                 index=0,
                 help="How this contract relates to other contracts in your portfolio",
-                key=f"form_{form_key}_doc_relationship"
+                key="form_doc_relationship"
             )
 
             counterparty_type = st.selectbox(
@@ -346,7 +322,7 @@ with content_container():
                          "Distributor", "Partner/JV", "Other"],
                 index=0,
                 help="Your relationship with the other party (downstream=Client, upstream=Vendor)",
-                key=f"form_{form_key}_counterparty_type"
+                key="form_counterparty_type"
             )
 
         # Confirmation button
@@ -369,15 +345,13 @@ with content_container():
                 )
                 st.success("✅ Intake complete! Risk Analysis now unlocked.")
                 st.balloons()
-                # Clear state and caches after successful completion
+                # Clear state after successful completion
                 clear_intake_state()
-                clear_all_caches()
                 st.rerun()
         
         with col_cancel:
             if st.button("🔄 Reset", type="secondary", use_container_width=True, key="btn_reset"):
                 clear_intake_state()
-                clear_all_caches()
                 st.rerun()
 
     # Instructions

@@ -1,0 +1,25 @@
+You are a contract negotiation expert. Generate a redline (counter-proposal) for the following clause.
+
+ORIGINAL CLAUSE:
+{original_text}
+
+IDENTIFIED RISKS:
+{risk_factors}
+
+STATUTORY CONCERN: {statutory_concern}
+
+Generate a redline that:
+1. Addresses the identified risks
+2. Maintains reasonable commercial balance
+3. Uses standard legal language
+4. Preserves statutory rights under Delaware UCC
+
+Respond with ONLY a JSON object:
+{
+  "redline_text": "<proposed replacement text>",
+  "changes_summary": "<brief description of changes>",
+  "risk_reduction": "<estimated new risk level 1-10>",
+  "rationale": "<legal/business rationale>"
+}
+
+Respond with JSON only.

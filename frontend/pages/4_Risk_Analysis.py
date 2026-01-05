@@ -1,6 +1,6 @@
 # pages/4_Risk_Analysis.py
 """
-CIP Risk Analysis v4.6
+CIP Risk Analysis v5.0 - CCE-Plus Integration
 - Integrated risk header with severity heatmap
 - Collapsible filters: "By Risk Level" (top) and "By Risk Category" (below)
 - By Risk Level: 5-button row
@@ -10,20 +10,35 @@ CIP Risk Analysis v4.6
 - Green filter shows compact list of low-risk clauses
 - Renamed "Business Impact" → "RATIONALE"
 - 11 categories (operational, closeout instead of "other")
+- CCE-Plus: Workflow gate enforcement (requires intake complete)
 """
 
 import streamlit as st
 import requests
 import json
 import re
+import sqlite3
 from datetime import datetime
 from typing import Dict, List, Optional
+import sys
+from pathlib import Path
+
+# Add backend to path
+backend_path = Path(__file__).parent.parent.parent / "backend"
+sys.path.insert(0, str(backend_path))
 
 from components.page_wrapper import (
     init_page,
     page_header,
     content_container
 )
+
+# Import workflow gates
+try:
+    from workflow_gates import WorkflowGate
+    WORKFLOW_GATES_AVAILABLE = True
+except ImportError:
+    WORKFLOW_GATES_AVAILABLE = False
 
 # ============================================================================
 # CONFIGURATION
@@ -127,20 +142,133 @@ def api_get_contracts() -> List[Dict]:
         return []
 
 
-def api_run_risk_scan(contract_id: int) -> Dict:
+def get_cce_risk_analysis(contract_id: int, db_path: str) -> Dict:
+    """
+    Read CCE-Plus risk data from clauses table and format for UI display.
+
+    Replaces old API-based analysis with direct database query.
+    CCE-Plus scores are already computed during intake.
+    """
     try:
-        response = requests.post(
-            f"{API_BASE}/analyze",
-            json={"contract_id": contract_id},
-            timeout=120
-        )
-        return response.json()
-    except requests.exceptions.Timeout:
-        return {"error": "Analysis timed out. The contract may be too large or the server is busy."}
-    except requests.exceptions.ConnectionError:
-        return {"error": "Cannot connect to analysis server. Please check if the backend is running."}
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, section_number, section_title, clause_type,
+                   verbatim_text, cce_risk_score, cce_risk_level,
+                   cce_statutory_flag, cce_cascade_risk
+            FROM clauses
+            WHERE contract_id = ?
+            ORDER BY cce_risk_score DESC
+        """, (contract_id,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            return {"error": "No clauses found for this contract"}
+
+        # Transform CCE data to UI format (compatible with existing rendering logic)
+        result = {
+            "analysis": {
+                "dealbreakers": [],      # CRITICAL risk
+                "critical_items": [],    # HIGH risk
+                "important_items": [],   # MEDIUM risk
+                "low_risk_clauses": [],  # LOW risk
+                "clauses_reviewed": len(rows),
+                "clauses_flagged": 0,
+                "severity_counts": {
+                    "dealbreaker": 0,
+                    "critical": 0,
+                    "important": 0,
+                    "low": 0
+                }
+            }
+        }
+
+        for row in rows:
+            clause_id, section_num, section_title, clause_type, text, score, level, statutory, cascade = row
+
+            # Create item dict for UI
+            item = {
+                "clause_id": clause_id,
+                "section": section_num or "N/A",
+                "title": section_title or "Untitled",
+                "category": clause_type or "General",
+                "original_text": text[:500] if text else "",  # Preview
+                "risk_score": score or 0,
+                "risk_level": level or "LOW",
+                "statutory_flag": statutory or "",
+                "cascade_risk": bool(cascade)
+            }
+
+            # Route to appropriate severity bucket
+            if level == 'CRITICAL':
+                result["analysis"]["dealbreakers"].append(item)
+                result["analysis"]["severity_counts"]["dealbreaker"] += 1
+                result["analysis"]["clauses_flagged"] += 1
+            elif level == 'HIGH':
+                result["analysis"]["critical_items"].append(item)
+                result["analysis"]["severity_counts"]["critical"] += 1
+                result["analysis"]["clauses_flagged"] += 1
+            elif level == 'MEDIUM':
+                result["analysis"]["important_items"].append(item)
+                result["analysis"]["severity_counts"]["important"] += 1
+                result["analysis"]["clauses_flagged"] += 1
+            else:  # LOW
+                result["analysis"]["low_risk_clauses"].append(item)
+                result["analysis"]["severity_counts"]["low"] += 1
+
+        return result
+
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": f"Error reading CCE-Plus risk data: {str(e)}"}
+
+
+# ============================================================================
+# WORKFLOW GATE HELPERS
+# ============================================================================
+
+def check_workflow_gate(contract_id: int) -> tuple[bool, str]:
+    """
+    Check if risk analysis can be started for this contract.
+
+    Returns:
+        (can_proceed: bool, message: str)
+    """
+    if not WORKFLOW_GATES_AVAILABLE:
+        return True, ""  # Graceful degradation if gates not available
+
+    try:
+        db_path = str(backend_path.parent / "data" / "contracts.db")
+        gate = WorkflowGate(db_path)
+        can_proceed, msg = gate.can_start_risk_analysis(contract_id)
+        return can_proceed, msg
+    except Exception as e:
+        return False, f"Error checking workflow gate: {e}"
+
+
+def advance_workflow_after_analysis(contract_id: int) -> bool:
+    """
+    Advance workflow after successful risk analysis.
+    Marks risk complete and unlocks redline stage.
+
+    Returns:
+        True if successful, False otherwise
+    """
+    if not WORKFLOW_GATES_AVAILABLE:
+        return True  # Graceful degradation
+
+    try:
+        db_path = str(backend_path.parent / "data" / "contracts.db")
+        gate = WorkflowGate(db_path)
+        # Mark risk analysis complete and unlock redline stage
+        success = gate.advance_stage(contract_id, 'risk')
+        if success:
+            return True
+        return False
+    except Exception:
+        return False
 
 
 # ============================================================================
@@ -151,6 +279,14 @@ def execute_scan_if_pending():
     if st.session_state.get("risk_scanning") and not st.session_state.get("risk_scan_in_progress"):
         contract_id = st.session_state.get("risk_scan_contract")
         if contract_id:
+            # Check workflow gate before proceeding
+            can_proceed, gate_msg = check_workflow_gate(contract_id)
+            if not can_proceed:
+                st.session_state["risk_scanning"] = False
+                st.session_state["risk_scan_contract"] = None
+                st.session_state["risk_error"] = f"Cannot start risk analysis: {gate_msg}"
+                return
+
             # Clear trigger flags and set lock BEFORE scan
             st.session_state["risk_scanning"] = False
             st.session_state["risk_scan_contract"] = None
@@ -173,7 +309,11 @@ def run_risk_scan(contract_id: int):
     st.session_state["risk_severity_counts"] = {}
     st.session_state["risk_low_risk_clauses"] = []
 
-    result = api_run_risk_scan(contract_id)
+    # Get database path
+    db_path = str(backend_path.parent / "data" / "contracts.db")
+
+    # Use CCE-Plus data from database instead of API call
+    result = get_cce_risk_analysis(contract_id, db_path)
 
     if not result:
         st.session_state["risk_error"] = "API returned empty response"
@@ -774,6 +914,13 @@ def render_findings_panel():
             st.session_state["risk_expanded"] = False
             st.rerun()
 
+    # Show low-risk items in collapsed expander when viewing "all"
+    if sev_filter == "all":
+        low_clauses = st.session_state.get("risk_low_risk_clauses", [])
+        if low_clauses:
+            with st.expander(f"🟢 Low Risk Items ({len(low_clauses)})", expanded=False):
+                render_low_risk_list()
+
 
 # ============================================================================
 # MAIN PAGE
@@ -783,7 +930,7 @@ init_page("Risk Analysis", "🔍", max_width=1400)
 
 page_header(
     "Risk Analysis",
-    subtitle="AI-powered contract risk assessment and clause analysis",
+    subtitle="AI-powered contract risk assessment with CCE-Plus workflow gates",
     show_status=True,
     show_version=True
 )
@@ -809,17 +956,39 @@ with content_container():
         st.markdown("**Select Contract**")
         selected_id = render_contract_selector(contracts)
 
-        # Scan button (compact)
+        # Check workflow gate for selected contract
+        can_scan = True
+        gate_message = ""
         if selected_id:
+            can_scan, gate_message = check_workflow_gate(selected_id)
+
+        # Scan button (compact)
+        if selected_id and can_scan:
             if st.button("🔍 Run Scan", key="btn_scan", type="primary", use_container_width=True):
                 st.session_state["risk_scanning"] = True
                 st.session_state["risk_scan_contract"] = selected_id
                 st.rerun()
+        elif selected_id and not can_scan:
+            st.button("🔍 Run Scan", key="btn_scan_blocked", type="secondary", use_container_width=True, disabled=True, help=gate_message)
+            st.warning(f"🔒 {gate_message}")
         else:
             st.button("🔍 Run Scan", key="btn_scan_disabled", type="secondary", use_container_width=True, disabled=True)
 
         # Integrated risk header with heatmap
         render_integrated_risk_header()
+
+        # Complete Risk Analysis button
+        if selected_id:
+            findings = st.session_state.get("risk_findings", [])
+            if findings:  # Only show if analysis has been run
+                st.markdown("---")
+                if st.button("✅ Complete Risk Analysis", key="btn_complete", type="primary", use_container_width=True):
+                    success = advance_workflow_after_analysis(selected_id)
+                    if success:
+                        st.success("✅ Risk analysis marked complete! Redline stage unlocked.")
+                        st.rerun()
+                    else:
+                        st.error("Failed to advance workflow. Please try again.")
 
         # Collapsible filters
         render_severity_filter()
