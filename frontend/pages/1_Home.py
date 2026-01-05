@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
 # pages/1_Home.py
-"""
-CIP Home Page v2.0
-- Unified animation: CIP Workflow + CIP Learning + ALIGNED Trophy + Times Square Celebration
-- Quick Stats dashboard
-"""
-
 import streamlit as st
 import sqlite3
 from pathlib import Path
@@ -15,7 +8,8 @@ from components.page_wrapper import (
     page_header,
     content_container
 )
-from components.home_animation import render_home_animation
+from components.workflow_animation import render_workflow_animation
+from components.learning_animation import render_learning_animation
 
 
 def get_contract_stats():
@@ -318,10 +312,6 @@ def render_quick_stats():
         """, unsafe_allow_html=True)
 
 
-# ============================================================================
-# PAGE SETUP
-# ============================================================================
-
 init_page("Home", "🏠", max_width=1400)
 
 page_header(
@@ -332,8 +322,14 @@ page_header(
 )
 
 with content_container():
-    # Unified animation - CIP Workflow + CIP Learning + ALIGNED + Times Square
-    render_home_animation(height=340)
+    # Two animations side by side - REDUCED HEIGHT
+    col1, col2 = st.columns(2)
     
-    # Quick Stats - Compact layout
+    with col1:
+        render_workflow_animation(height=320)
+    
+    with col2:
+        render_learning_animation(height=320)
+    
+    # Quick Stats - Compact layout (NO DIVIDER, NO FOOTER)
     render_quick_stats()
