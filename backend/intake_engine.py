@@ -834,16 +834,16 @@ def store_intake(
         cursor.execute("""
             INSERT INTO contracts (
                 title, filename, filepath, document_hash, clause_count,
-                party_client, party_vendor, counterparty, effective_date, expiration_date,
+                party_client, party_vendor, counterparty, our_entity, effective_date, expiration_date,
                 contract_value, currency, governing_law,
                 vendor_ticker, vendor_cik,
                 contract_type, contract_purpose, party_relationship, counterparty_type,
                 intake_status, intake_completed_at, intake_risk_summary,
                 created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             title, filename, file_path, document_hash, len(clauses),
-            metadata.party_client, metadata.party_vendor, metadata.party_vendor,
+            metadata.party_client, metadata.party_vendor, metadata.party_vendor, metadata.party_client,
             metadata.effective_date, metadata.expiration_date,
             metadata.contract_value, metadata.currency, metadata.governing_law,
             metadata.vendor_ticker, metadata.vendor_cik,
