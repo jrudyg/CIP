@@ -1,7 +1,8 @@
 # OPERATING PRINCIPLES
-## Distilled from 23 CIP Development Sessions
-**Version:** 1.1  
-**Created:** December 27, 2025  
+## Distilled from 38 Development Sessions (CIP + MI)
+**Version:** 1.2
+**Created:** December 27, 2025
+**Updated:** January 17, 2026
 **Source:** VALUE-scored analysis of lessons learned (Benefits / Risk × Collaboration)
 
 ---
@@ -273,6 +274,18 @@ Both parties: Alert → Inform → Guide
 
 ---
 
+### NEW ANTI-PATTERNS (January 2026 Sessions)
+
+| Anti-Pattern | Symptom | Correction | Source |
+|--------------|---------|------------|--------|
+| **Infrastructure Theater** | Building tools/frameworks without using them to create intelligence | Ship one decision, then optimize infrastructure | MI-09, PROJECT_CANON |
+| **Parallel Work Without Coordination** | Multiple agents working same domain causing duplicates/conflicts | Explicit handoffs with state verification | CC1_HANDOFF, CC2_HANDOFF |
+| **Lost Documentation** | 21K+ words of instructions missing after refactor/migration | Version control docs, backup before major changes | MI-14, PROJECT_CANON |
+| **Schema Assumption Creep** | Code assumes `confidence` column, actual is `overall_confidence` | RECON schema before queries - never assume structure | MI-14, PROJECT_CANON |
+| **Optional Integration Ambiguity** | Module says "optional" but doesn't enforce safe imports/fallbacks | Explicit None-checking, try/except wrappers, graceful degradation | DIMENSIONAL_INTEGRATION.md |
+
+---
+
 ## SESSION MANAGEMENT
 
 ### Context Window Protocol
@@ -341,6 +354,7 @@ When conflicts arise, resolve in this order:
 |---------|------|---------|
 | 1.0 | 2025-12-27 | Initial consolidation from 23 CIP sessions |
 | 1.1 | 2025-12-27 | Added frustration-driven rules (5-9), enforcement protocol, expanded anti-patterns |
+| 1.2 | 2026-01-17 | Added 5 January 2026 anti-patterns from MI-14 sessions (Infrastructure Theater, Parallel Work Without Coordination, Lost Documentation, Schema Assumption Creep, Optional Integration Ambiguity) |
 
 ---
 
