@@ -14,8 +14,28 @@ import json
 
 from config import (
     FileCategory, CATEGORIES, MIN_FILE_SIZE_FOR_HASH, MAX_FILE_SIZE_FOR_HASH,
-    SIMILAR_FILENAME_THRESHOLD, get_category_for_file, is_protected_file
+    SIMILAR_FILENAME_THRESHOLD, get_category_for_file, is_protected_file,
+    ARCHIVE_ROOT
 )
+
+def validate_path_safety(path: Path, allowed_root: Path) -> bool:
+    """
+    Validate that path is within allowed root directory.
+    Prevents path traversal attacks.
+
+    Args:
+        path: Path to validate
+        allowed_root: Allowed root directory
+
+    Returns:
+        True if path is safe, False otherwise
+    """
+    try:
+        resolved_path = path.resolve()
+        resolved_root = allowed_root.resolve()
+        return str(resolved_path).startswith(str(resolved_root))
+    except (ValueError, OSError):
+        return False
 
 @dataclass
 class FileInfo:
@@ -412,7 +432,8 @@ def load_directory_index(index_path: Path) -> List[FileInfo]:
         try:
             with open(index_path, 'r', encoding='utf-8-sig') as f:
                 data = json.load(f)
-        except:
+        except UnicodeDecodeError:
+            # Fall back to regular UTF-8 if BOM handling fails
             with open(index_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
