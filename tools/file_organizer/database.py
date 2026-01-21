@@ -109,15 +109,38 @@ CREATE INDEX IF NOT EXISTS idx_similar_groups_status ON similar_groups(status);
 @contextmanager
 def get_connection():
     """
-    Context manager for database connections.
+    Context manager for database connections with retry logic.
     Ensures proper cleanup.
+
+    Phase 2 security fix: Added retry logic for "database is locked" errors
     """
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Enable column access by name
-    try:
-        yield conn
-    finally:
-        conn.close()
+    import time
+
+    max_retries = 3
+    retry_delay = 0.1  # 100ms initial delay
+
+    for attempt in range(max_retries):
+        try:
+            # Increase timeout to 10 seconds for concurrent access
+            conn = sqlite3.connect(DB_PATH, timeout=10.0)
+            conn.row_factory = sqlite3.Row  # Enable column access by name
+            try:
+                yield conn
+                return  # Success, exit
+            finally:
+                conn.close()
+
+        except sqlite3.OperationalError as e:
+            # Check if it's a "database is locked" error
+            if "locked" in str(e).lower() and attempt < max_retries - 1:
+                # Log the retry attempt
+                print(f"Database locked, retrying in {retry_delay}s... (attempt {attempt + 1}/{max_retries})")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+                continue
+            else:
+                # Not a lock error, or final retry failed
+                raise
 
 def init_database():
     """
@@ -246,19 +269,57 @@ def get_pending_duplicate_groups(limit: int = 100) -> List[Dict]:
 
 def approve_duplicate_group(group_id: int) -> bool:
     """
-    Approve a duplicate group for deletion.
+    Approve a duplicate group for deletion with race condition protection.
+
+    Args:
+        group_id: Duplicate group ID
 
     Returns:
-        True if successful
+        True if successfully approved, False if group doesn't exist or not pending
     """
     with get_connection() as conn:
-        conn.execute("""
+        # Enable row-level locking for this transaction
+        conn.isolation_level = 'EXCLUSIVE'
+
+        # Check if group exists and is pending (atomic check-and-update)
+        cursor = conn.execute("""
             UPDATE duplicate_groups
             SET status = 'approved', reviewed_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            WHERE id = ? AND status = 'pending'
         """, (group_id,))
+
+        affected_rows = cursor.rowcount
         conn.commit()
-        return True
+
+        # Return True only if we actually updated a row
+        return affected_rows > 0
+
+def unapprove_duplicate_group(group_id: int) -> bool:
+    """
+    Un-approve a duplicate group (revert to pending status).
+
+    Args:
+        group_id: Duplicate group ID
+
+    Returns:
+        True if successfully un-approved, False if group doesn't exist or not approved
+    """
+    with get_connection() as conn:
+        # Enable row-level locking for this transaction
+        conn.isolation_level = 'EXCLUSIVE'
+
+        # Check if group exists and is approved (atomic check-and-update)
+        cursor = conn.execute("""
+            UPDATE duplicate_groups
+            SET status = 'pending', reviewed_at = NULL
+            WHERE id = ? AND status = 'approved'
+        """, (group_id,))
+
+        affected_rows = cursor.rowcount
+        conn.commit()
+
+        # Return True only if we actually updated a row
+        return affected_rows > 0
 
 def create_archive_session(archive_path: str, notes: Optional[str] = None) -> str:
     """
@@ -368,19 +429,16 @@ def get_statistics() -> Dict:
         cursor = conn.execute("SELECT COUNT(*) as count FROM duplicate_groups WHERE status = 'pending'")
         stats['pending_duplicates'] = cursor.fetchone()['count']
 
-        # Total potential savings
+        # Total potential savings (Phase 2 fix: correct formula)
+        # For each duplicate group, savings = file_size × (count - 1)
+        # We keep 1 copy and delete (count - 1) duplicates
         cursor = conn.execute("""
-            SELECT SUM(total_size) - MAX(total_size) as savings
-            FROM (
-                SELECT g.id, SUM(m.file_size) as total_size
-                FROM duplicate_groups g
-                JOIN duplicate_members m ON g.id = m.group_id
-                WHERE g.status = 'pending'
-                GROUP BY g.id
-            )
+            SELECT SUM((g.total_size / g.file_count) * (g.file_count - 1)) as savings
+            FROM duplicate_groups g
+            WHERE g.status = 'pending' AND g.file_count > 1
         """)
         savings_row = cursor.fetchone()
-        stats['potential_savings_bytes'] = savings_row['savings'] if savings_row['savings'] else 0
+        stats['potential_savings_bytes'] = int(savings_row['savings']) if savings_row['savings'] else 0
 
         # Active archive sessions
         cursor = conn.execute("SELECT COUNT(*) as count FROM archive_sessions WHERE status = 'active'")

@@ -1,0 +1,17 @@
+# File Organizer v1.1 - Python Dependencies
+# Phase 2 security fixes complete
+
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+flask-limiter==3.5.0
+
+# Configuration
+python-dotenv==1.0.0
+
+# Production Server
+waitress==3.0.0
+
+# Testing (optional)
+pytest==7.4.3
+pytest-cov==4.1.0

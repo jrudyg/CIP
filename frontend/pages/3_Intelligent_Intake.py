@@ -186,10 +186,21 @@ with content_container():
             clear_intake_state()
             clear_all_caches()
 
-            # Save to temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
-                tmp_file.write(uploaded_file.getbuffer())
-                temp_path = tmp_file.name
+            # Save to permanent storage (not temp file)
+            from werkzeug.utils import secure_filename
+
+            UPLOAD_DIR = backend_path.parent / "data" / "uploads"
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+            # Create unique filename with timestamp
+            safe_filename = secure_filename(uploaded_file.name)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            unique_filename = f"{timestamp}_{safe_filename}"
+            permanent_path = UPLOAD_DIR / unique_filename
+
+            # Write to permanent location
+            with open(permanent_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
 
             try:
                 # Import and run intake engine
@@ -202,7 +213,7 @@ with content_container():
 
                         # Process (without embeddings for speed)
                         result = process_intake(
-                            file_path=temp_path,
+                            file_path=str(permanent_path),
                             db_path=db_path,
                             embed=False,
                             verbose=False,
@@ -239,11 +250,8 @@ with content_container():
                             st.code(traceback.format_exc())
 
             finally:
-                # Cleanup temp file
-                try:
-                    os.unlink(temp_path)
-                except:
-                    pass
+                # File saved permanently - no cleanup needed
+                pass
 
     # ========================================================================
     # METADATA CONFIRMATION FORM - Rendered from session state (persists!)

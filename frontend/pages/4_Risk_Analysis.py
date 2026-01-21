@@ -23,6 +23,9 @@ from typing import Dict, List, Optional
 import sys
 from pathlib import Path
 
+# Import redline formatter utility
+from frontend.utils.redline_formatter import format_redline
+
 # Add backend to path
 backend_path = Path(__file__).parent.parent.parent / "backend"
 sys.path.insert(0, str(backend_path))
@@ -641,23 +644,6 @@ def get_filtered_findings() -> List[Dict]:
         return SEVERITY_CONFIG.get(sev, {}).get("order", 99)
 
     return sorted(filtered, key=order)
-
-
-def format_redline(text: str) -> str:
-    """Format redline text with ~~deletions~~ and `additions` styling."""
-    if not text:
-        return ""
-    text = re.sub(
-        r'~~(.+?)~~',
-        r'<span style="color:#EF4444;text-decoration:line-through;background:rgba(239,68,68,0.1);">\1</span>',
-        text
-    )
-    text = re.sub(
-        r'`([^`]+)`',
-        r'<span style="color:#22C55E;background:rgba(34,197,94,0.15);padding:0 4px;border-radius:2px;">\1</span>',
-        text
-    )
-    return text
 
 
 def render_finding_card(finding: Dict, index: int = 0):

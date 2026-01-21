@@ -25,7 +25,8 @@
       "trigger_concepts": [
         "prepayment lock", "non-refundable", "remedy veto", "sole remedy",
         "exclusive remedy", "limited remedy", "waiver of remedy", "no refund",
-        "forfeiture", "full prepayment", "only remedy", "exclusive recourse"
+        "forfeiture", "full prepayment", "only remedy", "exclusive recourse",
+        "waives all claims", "waive all claims", "waive claims for"
       ],
       "risk_multiplier": 10.0,
       "forensic_logic": {
@@ -342,7 +343,7 @@
       },
       "trigger_concepts": [
         "purchase order", "acknowledgment", "confirmation", "terms and conditions",
-        "standard terms", "additional terms", "different terms", "prevail",
+        "additional terms", "different terms", "prevail",
         "supersede", "govern", "control", "battle of forms"
       ],
       "risk_multiplier": 7.0,

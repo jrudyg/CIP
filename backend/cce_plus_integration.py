@@ -112,27 +112,54 @@ RISK_TYPE_MAP = {
 }
 
 
-def calculate_risk_score(severity: int, complexity: int, impact: int) -> float:
+def calculate_risk_score(
+    severity: int,
+    complexity: int,
+    impact: int,
+    statutory_multiplier: Optional[float] = None,
+    statutory_weight: float = 0.4
+) -> float:
     """
-    Calculate weighted risk score using 0.3/0.3/0.4 formula.
-    
+    Calculate weighted risk score with optional statutory component.
+
+    Base formula: (severity × 0.3) + (complexity × 0.3) + (impact × 0.4)
+
+    If UCC statutory violation detected:
+        - Base components weighted at (1 - statutory_weight)
+        - Statutory component weighted at statutory_weight
+        - Final score = (base × 0.6) + (statutory_multiplier × 0.4)
+
     Args:
-        severity: 0-10 scale
-        complexity: 0-10 scale
-        impact: 0-10 scale
-    
+        severity: 0-10 legal/business severity scale
+        complexity: 0-10 interpretive complexity scale
+        impact: 0-10 business consequence scale
+        statutory_multiplier: 0-10 UCC risk multiplier (if violation detected)
+        statutory_weight: Weight for statutory component (default 0.4 = 40%)
+
     Returns:
         Weighted score 0.0-10.0
+
+    Example:
+        Base score 6.8 + UCC multiplier 10.0 = 8.08 (escalates MEDIUM→HIGH)
     """
     # Normalize inputs
     severity = max(0, min(10, severity))
     complexity = max(0, min(10, complexity))
     impact = max(0, min(10, impact))
-    
-    # Apply weights: 0.3 + 0.3 + 0.4 = 1.0
-    score = (severity * 0.3) + (complexity * 0.3) + (impact * 0.4)
-    
-    return round(score, 1)
+
+    # Calculate base score from severity/complexity/impact
+    base_score = (severity * 0.3) + (complexity * 0.3) + (impact * 0.4)
+
+    # If statutory violation detected, apply weighted integration
+    if statutory_multiplier is not None:
+        statutory_multiplier = max(0, min(10, statutory_multiplier))
+        base_weight = 1.0 - statutory_weight  # 0.6 if statutory_weight = 0.4
+        statutory_component = statutory_multiplier * statutory_weight
+        final_score = (base_score * base_weight) + statutory_component
+        return round(final_score, 1)
+
+    # No statutory violation: return base score
+    return round(base_score, 1)
 
 
 def classify_risk(score: float) -> str:
@@ -215,13 +242,31 @@ def score_clause_risk(
     elif word_count < 20:
         complexity = max(1, complexity - 1)
     
-    # Calculate final score
-    risk_score = calculate_risk_score(severity, complexity, impact)
+    # Check for statutory conflicts with UCC rule matching
+    statutory_result = detect_statutory_conflict(clause_text, clause_type)
+
+    # Extract statutory multiplier if violation found
+    statutory_multiplier = None
+    statutory_flag = None
+    statutory_cite = None
+    ucc_violation = None
+
+    if statutory_result:
+        statutory_multiplier = statutory_result.get("risk_multiplier")
+        statutory_flag = statutory_result.get("statutory_flag")
+        statutory_cite = statutory_result.get("citation")
+        ucc_violation = statutory_result  # Store full UCC match details
+
+    # Calculate risk score with statutory weight integration (40% if violation detected)
+    risk_score = calculate_risk_score(
+        severity,
+        complexity,
+        impact,
+        statutory_multiplier=statutory_multiplier,
+        statutory_weight=0.4  # 40% weight for UCC violations
+    )
     risk_level = classify_risk(risk_score)
-    
-    # Check for statutory flags
-    statutory_flag, statutory_cite = detect_statutory_conflict(clause_text)
-    
+
     return {
         'risk_score': risk_score,
         'risk_level': risk_level,
@@ -230,6 +275,7 @@ def score_clause_risk(
         'impact': impact,
         'statutory_flag': statutory_flag,
         'statutory_cite': statutory_cite,
+        'ucc_violation': ucc_violation,  # Full UCC match details
         'word_count': word_count
     }
 
@@ -238,27 +284,59 @@ def score_clause_risk(
 # STATUTORY CONFLICT DETECTION
 # =============================================================================
 
-def detect_statutory_conflict(clause_text: str) -> Tuple[Optional[str], Optional[str]]:
+def detect_statutory_conflict(clause_text: str, clause_type: str = None) -> Optional[Dict]:
     """
-    Detect Delaware UCC statutory conflicts in clause text.
-    
+    Detect Delaware UCC statutory conflicts via UCC_Statutory_Logic_v2.json.
+
+    Now uses dedicated ucc_statutory_matcher module for enhanced detection.
+
+    Args:
+        clause_text: Contract clause text to analyze
+        clause_type: Optional clause category (not currently used for filtering)
+
     Returns:
-        Tuple of (flag, citation) or (None, None)
+        Dict with UCC violation details, or None if no violation
+
+        {
+            "statutory_flag": str,      # e.g., "UCC-2-719"
+            "citation": str,            # e.g., "6 Del. C. § 2-719"
+            "severity": str,            # "CRITICAL", "HIGH", "MEDIUM"
+            "risk_multiplier": float,   # 5.0-10.0
+            "matched_concepts": List[str],  # Trigger concepts found
+            "category": str,            # e.g., "REMEDY_LIMITATION"
+            "business_impact": str,
+            "si_impact": str
+        }
     """
-    logic = load_statutory_logic()
-    text_lower = clause_text.lower()
-    
-    for rule in logic.get('rules', []):
-        trigger_concepts = rule.get('trigger_concepts', [])
-        
-        # Check if any trigger concepts present
-        matches = sum(1 for concept in trigger_concepts if concept in text_lower)
-        
-        # Threshold: 2+ trigger concepts = flag
-        if matches >= 2:
-            return rule['id'], rule['citation']
-    
-    return None, None
+    try:
+        from backend.ucc_statutory_matcher import detect_ucc_violation
+
+        # Use new UCC matcher module
+        return detect_ucc_violation(clause_text, clause_type)
+
+    except ImportError:
+        # Fallback to legacy detection if ucc_statutory_matcher not available
+        logic = load_statutory_logic()
+        text_lower = clause_text.lower()
+
+        for rule in logic.get('rules', []):
+            trigger_concepts = rule.get('trigger_concepts', [])
+
+            # Check if any trigger concepts present
+            matches = sum(1 for concept in trigger_concepts if concept in text_lower)
+
+            # Threshold: 2+ trigger concepts = flag
+            if matches >= 2:
+                return {
+                    "statutory_flag": rule['id'],
+                    "citation": rule['citation'],
+                    "severity": rule.get('severity', 'HIGH'),
+                    "risk_multiplier": rule.get('risk_multiplier', 8.0),
+                    "matched_concepts": [],  # Legacy mode doesn't track matches
+                    "category": rule.get('category', 'UNKNOWN')
+                }
+
+        return None
 
 
 # =============================================================================

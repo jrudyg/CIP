@@ -42,9 +42,18 @@ CATEGORIES = {
         name='Old Backups',
         patterns=['**/backup/**', '**/archive/**', '**/*_backup_*', '**/*.bak'],
         retention_days=180,
-        priority=2,
+        priority=3,
         auto_delete=False,
         description='Backup and archive files older than retention period'
+    ),
+
+    'archives': FileCategory(
+        name='Compressed Archives',
+        patterns=['*.zip', '*.rar', '*.7z', '*.tar', '*.gz', '*.tgz'],
+        retention_days=180,
+        priority=4,
+        auto_delete=False,
+        description='Compressed archive files'
     ),
 
     'media': FileCategory(
@@ -52,7 +61,7 @@ CATEGORIES = {
         patterns=['*.mp4', '*.mov', '*.avi', '*.mkv', '*.mp3', '*.wav', '*.flac',
                   '*.jpg', '*.jpeg', '*.png', '*.gif', '*.bmp', '*.heic'],
         retention_days=180,
-        priority=3,
+        priority=5,
         auto_delete=False,
         description='Audio, video, and image files'
     ),
@@ -62,7 +71,7 @@ CATEGORIES = {
         patterns=['*.pdf', '*.doc', '*.docx', '*.xls', '*.xlsx', '*.ppt', '*.pptx',
                   '*.txt', '*.rtf', '*.odt'],
         retention_days=365,
-        priority=4,
+        priority=6,
         auto_delete=False,
         description='Office documents and PDFs'
     ),
@@ -72,7 +81,7 @@ CATEGORIES = {
         patterns=['*.py', '*.js', '*.java', '*.cpp', '*.h', '*.c', '*.cs',
                   '*.go', '*.rs', '*.ts', '*.tsx', '*.jsx'],
         retention_days=90,
-        priority=5,
+        priority=7,
         auto_delete=False,
         description='Source code files'
     ),
@@ -81,18 +90,9 @@ CATEGORIES = {
         name='Reference Data',
         patterns=['*.xml', '*.json', '*.csv', '*.db', '*.sqlite', '*.yaml', '*.yml'],
         retention_days=365,
-        priority=5,
+        priority=8,
         auto_delete=False,
         description='Data files and databases'
-    ),
-
-    'archives': FileCategory(
-        name='Compressed Archives',
-        patterns=['*.zip', '*.rar', '*.7z', '*.tar', '*.gz', '*.tgz'],
-        retention_days=180,
-        priority=3,
-        auto_delete=False,
-        description='Compressed archive files'
     )
 }
 
@@ -130,6 +130,10 @@ LOG_LEVEL = "INFO"  # DEBUG, INFO, WARNING, ERROR
 # Dashboard configuration
 DASHBOARD_HOST = "127.0.0.1"
 DASHBOARD_PORT = 5001
+
+# Debug mode (controlled by environment variable)
+import os
+DEBUG_MODE = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Safety limits
 MAX_FILES_PER_OPERATION = 1000  # maximum files to process in single operation
@@ -177,36 +181,53 @@ def is_protected_file(file_path: Path) -> bool:
 
     return False
 
-def validate_config() -> List[str]:
+def validate_config() -> bool:
     """
-    Validate configuration and return list of warnings/errors.
-    """
-    warnings = []
+    Validate configuration on startup.
+    Raises ValueError with detailed error message if configuration is invalid.
+    Returns True if validation passes.
 
-    # Check if archive root exists or can be created
+    Phase 2 security fix: Enhanced config validation
+    """
+    errors = []
+
+    # Check if archive root parent exists (archive root itself will be created)
     if not ARCHIVE_ROOT.parent.exists():
-        warnings.append(f"Archive root parent directory does not exist: {ARCHIVE_ROOT.parent}")
+        errors.append(f"ARCHIVE_ROOT parent directory does not exist: {ARCHIVE_ROOT.parent}")
 
     # Check if database directory exists
     if not DB_PATH.parent.exists():
-        warnings.append(f"Database directory does not exist: {DB_PATH.parent}")
+        errors.append(f"Database directory does not exist: {DB_PATH.parent}")
 
     # Check if log directory exists
     if not LOG_FILE.parent.exists():
-        warnings.append(f"Log directory does not exist: {LOG_FILE.parent}")
+        errors.append(f"Log directory does not exist: {LOG_FILE.parent}")
 
-    # Validate G: Drive index exists
-    if not GDRIVE_INDEX.exists():
-        warnings.append(f"G: Drive index not found: {GDRIVE_INDEX}")
+    # Validate port number
+    if DASHBOARD_PORT < 1024 or DASHBOARD_PORT > 65535:
+        errors.append(f"Invalid port number: {DASHBOARD_PORT} (must be 1024-65535)")
+
+    # Validate MIN_FILE_SIZE_FOR_HASH < MAX_FILE_SIZE_FOR_HASH
+    if MIN_FILE_SIZE_FOR_HASH >= MAX_FILE_SIZE_FOR_HASH:
+        errors.append(f"MIN_FILE_SIZE_FOR_HASH ({MIN_FILE_SIZE_FOR_HASH}) must be less than MAX_FILE_SIZE_FOR_HASH ({MAX_FILE_SIZE_FOR_HASH})")
+
+    # Validate similarity threshold
+    if not (0.0 <= SIMILAR_FILENAME_THRESHOLD <= 1.0):
+        errors.append(f"SIMILAR_FILENAME_THRESHOLD must be between 0.0 and 1.0, got {SIMILAR_FILENAME_THRESHOLD}")
 
     # Check for priority conflicts
     priorities = {}
     for key, cat in CATEGORIES.items():
         if cat.priority in priorities:
-            warnings.append(f"Priority {cat.priority} used by both {cat.name} and {priorities[cat.priority]}")
+            errors.append(f"Priority {cat.priority} used by both {cat.name} and {priorities[cat.priority]}")
         priorities[cat.priority] = cat.name
 
-    return warnings
+    # If errors found, raise exception
+    if errors:
+        error_msg = "Configuration errors found:\n" + "\n".join(f"  - {e}" for e in errors)
+        raise ValueError(error_msg)
+
+    return True
 
 if __name__ == "__main__":
     # Test configuration
@@ -232,10 +253,9 @@ if __name__ == "__main__":
         print(f"  ... and {len(PROTECTED_PATTERNS) - 5} more")
 
     # Run validation
-    warnings = validate_config()
-    if warnings:
-        print(f"\nConfiguration Warnings ({len(warnings)}):")
-        for warning in warnings:
-            print(f"  WARNING: {warning}")
-    else:
-        print("\nConfiguration valid")
+    try:
+        validate_config()
+        print("\n[OK] Configuration valid")
+    except ValueError as e:
+        print("\n[ERROR] Configuration errors found:")
+        print(str(e))

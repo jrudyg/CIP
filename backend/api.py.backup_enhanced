@@ -613,85 +613,105 @@ def upload_enhanced():
 @app.route('/api/parse-metadata', methods=['POST'])
 def parse_metadata():
     """
-    Extract contract metadata using Claude AI - Enhanced 16 fields
+    Extract contract metadata using Claude AI
+
+    JSON Body:
+        - contract_id: Contract ID
+
+    Returns:
+        JSON with extracted metadata:
+        {
+            'metadata': {
+                'title': str,
+                'counterparty': str,
+                'contract_type': str,
+                'effective_date': str (YYYY-MM-DD),
+                'expiration_date': str (YYYY-MM-DD),
+                'contract_value': float
+            }
+        }
     """
     logger.info("Parse metadata request received")
 
+    # Validate Claude API availability
     claude_error = validate_claude_available()
     if claude_error:
         return jsonify(claude_error[0]), claude_error[1]
 
+    # Validate orchestrator availability
+    orch_error = validate_orchestrator_available()
+    if orch_error:
+        return jsonify(orch_error[0]), orch_error[1]
+
     data = request.get_json()
+
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
     contract_id = data.get('contract_id')
+
     if not contract_id:
         return jsonify({'error': 'contract_id required'}), 400
 
     try:
-        conn = get_db_connection()
+        # Get contract file path from database
+        conn, db_error = safe_db_connection()
+        if db_error:
+            return jsonify(db_error[0]), db_error[1]
+
         cursor = conn.cursor()
-        cursor.execute("SELECT filepath, filename FROM contracts WHERE id = ?", (contract_id,))
+
+        cursor.execute("SELECT filename, filepath FROM contracts WHERE id = ?", (contract_id,))
         row = cursor.fetchone()
         conn.close()
 
         if not row:
-            return jsonify({'error': f'Contract {contract_id} not found'}), 404
+            logger.error(f"Contract {contract_id} not found")
+            return jsonify({'error': 'Contract not found'}), 404
 
-        filepath = row[0]
-        filename = row[1]
+        filename = row[0]
+        file_path = row[1]
 
-        # Get file size
-        file_size = None
-        if filepath and os.path.exists(filepath):
-            file_size = os.path.getsize(filepath)
+        logger.info(f"Extracting metadata for contract {contract_id}: {filename}")
 
-        # Read contract text
-        from docx import Document
-        doc = Document(filepath)
-        full_text = "\n".join([p.text for p in doc.paragraphs])
+        doc_text = orchestrator.extractor.extract_text(file_path)
 
-        # Truncate for API
-        max_chars = 50000
-        contract_text = full_text[:max_chars] if len(full_text) > max_chars else full_text
+        if not doc_text or len(doc_text) < 100:
+            logger.warning("Insufficient document content for metadata extraction")
+            return jsonify({
+                'metadata': {
+                    'title': filename,
+                    'counterparty': '',
+                    'contract_type': 'Other',
+                    'effective_date': None,
+                    'expiration_date': None,
+                    'contract_value': None
+                }
+            }), 200
 
-        # Enhanced extraction prompt
-        extraction_prompt = f"""You are a contract analysis expert. Extract metadata from the following contract text.
+        # Prepare Claude prompt for metadata extraction
+        extraction_prompt = f"""You are a contract analysis expert. Extract key metadata from this contract document.
 
-## Instructions:
-1. Extract ALL fields listed below
-2. For fields not found in the document, return "NOT_FOUND"
-3. For fields not applicable to this contract type, return "N/A"
-4. Use exact formats specified for dates and numbers
-5. Be precise - do not guess or infer values not explicitly stated
+DOCUMENT FILENAME: {filename}
 
-## N/A Rules by Contract Type:
-- NDA/MNDA: contract_value=N/A, payment_terms=N/A, warranty_period=N/A
-- SOW: auto_renewal=N/A
-- Amendment/Addendum: auto_renewal=N/A
+DOCUMENT TEXT (first 4000 chars):
+{doc_text[:4000]}
 
-## Response Format - Return ONLY valid JSON:
+Extract and return ONLY a valid JSON object with these exact fields:
 {{
-    "title": "string or NOT_FOUND",
-    "contract_type": "MSA|SOW|NDA|MNDA|Amendment|Addendum|Service Agreement|License Agreement|Other",
-    "effective_date": "YYYY-MM-DD or NOT_FOUND",
-    "expiration_date": "YYYY-MM-DD or NOT_FOUND",
-    "our_entity": "string or NOT_FOUND",
-    "our_role": "Customer|Vendor|Partner|Licensor|Licensee|NOT_FOUND",
-    "counterparty": "string or NOT_FOUND",
-    "counterparty_role": "Customer|Vendor|Partner|Licensor|Licensee|NOT_FOUND",
-    "contract_value": "number or NOT_FOUND or N/A",
-    "payment_terms": "string or NOT_FOUND or N/A",
-    "liability_cap": "string or NOT_FOUND",
-    "auto_renewal": "true|false|NOT_FOUND|N/A",
-    "termination_notice_days": "number or NOT_FOUND",
-    "governing_law": "string or NOT_FOUND",
-    "warranty_period": "string or NOT_FOUND or N/A"
+    "title": "Contract title or name (e.g., 'Master Service Agreement', 'Software License Agreement')",
+    "counterparty": "The name of the other party in the contract (company or person)",
+    "contract_type": "One of: NDA, MSA, SOW, License, Employment, Amendment, Other",
+    "effective_date": "YYYY-MM-DD or null if not found",
+    "expiration_date": "YYYY-MM-DD or null if not found",
+    "contract_value": numeric dollar amount or null if not found (no currency symbols)
 }}
 
-## Contract Text:
-{contract_text}"""
+IMPORTANT:
+- Return ONLY the JSON object, no other text
+- For contract_type, choose the BEST match from the list
+- For contract_value, extract only the number (e.g., 50000 not "$50,000")
+- Use null (not string "null") for missing values"""
 
         # Call Claude API
         if not claude_client:
@@ -701,13 +721,14 @@ def parse_metadata():
         response = claude_client.messages.create(
             model=DEFAULT_MODEL,
             max_tokens=2000,
-            temperature=0.1,
+            temperature=0.3,
             messages=[{
                 "role": "user",
                 "content": extraction_prompt
             }]
         )
 
+        # Parse response
         response_text = response.content[0].text.strip()
         logger.debug(f"Claude response: {response_text}")
 
@@ -717,15 +738,6 @@ def parse_metadata():
 
         if json_match:
             metadata = json.loads(json_match.group())
-            
-            # Add file_size (system-captured, not AI)
-            metadata['file_size'] = file_size
-            
-            # Normalize NOT_FOUND to consistent format
-            for key, value in metadata.items():
-                if value == "NOT_FOUND" or value == "null" or value is None:
-                    metadata[key] = "Not found"
-            
             logger.info(f"Metadata extracted successfully for contract {contract_id}")
 
             # Store parsed_metadata in database
@@ -733,10 +745,9 @@ def parse_metadata():
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE contracts
-                SET parsed_metadata = ?,
-                    file_size = ?
+                SET parsed_metadata = ?
                 WHERE id = ?
-            """, (json.dumps(metadata), file_size, contract_id))
+            """, (json.dumps(metadata), contract_id))
             conn.commit()
             conn.close()
 
@@ -753,15 +764,27 @@ def parse_metadata():
         return jsonify({'error': str(e)}), 500
 
 
-# ============================================================================
-# UPDATED: /api/verify-metadata - Store all 16 fields (replace lines ~767-850)
-# ============================================================================
-
-
 @app.route('/api/verify-metadata', methods=['POST'])
 def verify_metadata():
     """
-    Save user-verified metadata to database - Enhanced 16 fields
+    Save user-verified metadata to database
+
+    JSON Body:
+        - contract_id: Contract ID
+        - metadata: {
+            'title': str,
+            'counterparty': str,
+            'contract_type': str,
+            'contract_stage': str (MNDA|NDA|COMMERCIAL|EXECUTED),
+            'position': str (customer|vendor|partner|landlord|tenant),
+            'leverage': str (strong|balanced|weak),
+            'effective_date': str,
+            'expiration_date': str,
+            'contract_value': float
+        }
+
+    Returns:
+        Success status
     """
     logger.info("Verify metadata request received")
 
@@ -780,53 +803,51 @@ def verify_metadata():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Update contract with verified metadata - all 16 fields
+        # Update contract with verified metadata (v1.4: includes all date fields + category)
         cursor.execute("""
             UPDATE contracts
             SET title = ?,
+                counterparty = ?,
                 contract_type = ?,
+                contract_stage = ?,
+                contract_category = ?,
+                position = ?,
+                leverage = ?,
+                date_in = ?,
+                date_executed = ?,
                 effective_date = ?,
                 expiration_date = ?,
-                our_entity = ?,
-                position = ?,
-                counterparty = ?,
-                counterparty_role = ?,
                 contract_value = ?,
-                payment_terms = ?,
-                liability_cap = ?,
-                auto_renewal = ?,
-                termination_notice_days = ?,
-                governing_law = ?,
-                warranty_period = ?,
-                file_size = ?,
+                version_number = ?,
+                parent_id = ?,
+                narrative = ?,
                 metadata_verified = 1,
                 status = 'active',
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         """, (
             metadata.get('title'),
+            metadata.get('counterparty'),
             metadata.get('contract_type'),
+            metadata.get('contract_stage', 'COMMERCIAL'),
+            metadata.get('contract_category', 'A'),  # v1.2: A/B/C/D
+            metadata.get('position'),
+            metadata.get('leverage'),
+            metadata.get('date_in'),  # v1.4: Date received
+            metadata.get('date_executed'),  # v1.4: Signature date
             metadata.get('effective_date'),
             metadata.get('expiration_date'),
-            metadata.get('our_entity'),
-            metadata.get('our_role'),  # stored as 'position' in DB
-            metadata.get('counterparty'),
-            metadata.get('counterparty_role'),
-            metadata.get('contract_value') if metadata.get('contract_value') not in ['Not found', 'N/A'] else None,
-            metadata.get('payment_terms'),
-            metadata.get('liability_cap'),
-            metadata.get('auto_renewal') if metadata.get('auto_renewal') not in ['Not found', 'N/A'] else None,
-            metadata.get('termination_notice_days') if metadata.get('termination_notice_days') not in ['Not found', 'N/A'] else None,
-            metadata.get('governing_law'),
-            metadata.get('warranty_period'),
-            metadata.get('file_size'),
+            metadata.get('contract_value'),
+            metadata.get('version_number', 1),
+            metadata.get('parent_id'),
+            metadata.get('business_owner'),  # Stored in narrative field
             contract_id
         ))
 
         conn.commit()
         conn.close()
 
-        logger.info(f"Metadata verified and saved for contract {contract_id}")
+        logger.info(f"Metadata verified and saved for contract {contract_id} (stage: {metadata.get('contract_stage', 'COMMERCIAL')})")
 
         return jsonify({
             'success': True,
@@ -839,11 +860,7 @@ def verify_metadata():
         return jsonify({'error': str(e)}), 500
 
 
-# ============================================================================
-# NEW: PUT /api/contract/<id> - Update contract metadata
-# ============================================================================
-
-
+@app.route('/api/find-similar', methods=['POST'])
 def find_similar():
     """
     Find similar contracts based on metadata

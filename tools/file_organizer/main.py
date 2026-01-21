@@ -64,9 +64,21 @@ def cmd_stats(args):
 
 def cmd_dashboard(args):
     """Start web dashboard"""
-    print("Dashboard not yet implemented - coming in Session 2!")
-    print(f"Will run on: http://{DASHBOARD_HOST}:{args.port}")
-    return 0
+    from dashboard_api import run_dashboard
+
+    print(f"\nStarting File Organizer Dashboard...")
+    print(f"Dashboard URL: http://{DASHBOARD_HOST}:{args.port}")
+    print(f"\nOpen your browser and navigate to the URL above")
+    print(f"Press Ctrl+C to stop the server\n")
+
+    try:
+        run_dashboard(host=DASHBOARD_HOST, port=args.port, debug=args.debug)
+    except KeyboardInterrupt:
+        print("\nDashboard stopped")
+        return 0
+    except Exception as e:
+        print(f"\nError starting dashboard: {e}")
+        return 1
 
 def cmd_duplicates(args):
     """List duplicate groups"""
@@ -174,6 +186,7 @@ Examples:
     # Dashboard command
     dash_parser = subparsers.add_parser('dashboard', help='Start web dashboard')
     dash_parser.add_argument('--port', type=int, default=DASHBOARD_PORT, help='Port number')
+    dash_parser.add_argument('--debug', action='store_true', help='Enable debug mode')
     dash_parser.set_defaults(func=cmd_dashboard)
 
     # Init command

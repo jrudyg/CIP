@@ -229,7 +229,7 @@ def parse_document(file_path: str) -> str:
 # Section detection patterns (from CCE-Plus clause-chunker.js)
 SECTION_PATTERN = re.compile(r'^(?:SECTION|ARTICLE)\s+(\d+)[\.:]\s*(.+)$', re.IGNORECASE | re.MULTILINE)
 CLAUSE_PATTERN = re.compile(r'^§\s*(\d+(?:\.\d+)?)\s+(.+)$', re.MULTILINE)
-NUMBERED_PATTERN = re.compile(r'^(\d+(?:\.\d+)?)\s+([A-Z][^.]+)\.?\s*$', re.MULTILINE)
+NUMBERED_PATTERN = re.compile(r'^(\d+(?:\.\d+)?)\s+([A-Z][^\n]{3,60})\s*$', re.MULTILINE)
 
 # Clause type detection keywords
 CLAUSE_TYPE_KEYWORDS = {
