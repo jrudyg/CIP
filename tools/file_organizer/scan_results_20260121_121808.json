@@ -1,0 +1,16 @@
+{
+  "scan_id": 3,
+  "scan_date": "2026-01-21T12:18:08.213453",
+  "index_path": "G:\\My Drive\\directory_index.json",
+  "total_files": 0,
+  "total_size": 0,
+  "total_size_gb": 0.0,
+  "categorized_files": 0,
+  "uncategorized_files": 0,
+  "category_breakdown": {},
+  "duplicate_groups": 0,
+  "potential_savings_bytes": 0,
+  "potential_savings_mb": 0.0,
+  "similar_groups": 0,
+  "scan_duration_seconds": 0.0
+}

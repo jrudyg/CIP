@@ -1,0 +1,43 @@
+
+================================================================================
+  FILE ORGANIZER SCAN REPORT
+  Generated: 2026-01-21 11:53:43
+================================================================================
+
+SCAN OVERVIEW
+-------------
+Drive/Index:        G:\My Drive\directory_index.json
+Scan Date:          2026-01-21T11:53:43.583835
+Duration:           25.28 seconds
+
+FILE STATISTICS
+---------------
+Total Files:        1,000
+Total Size:         2.93 GB
+Categorized:        806
+Uncategorized:      194
+
+CATEGORY BREAKDOWN
+------------------
+Documents                             430 files
+Reference Data                        135 files
+Source Code                           132 files
+Media Files                           104 files
+Compressed Archives                     5 files
+
+DUPLICATE ANALYSIS
+------------------
+Duplicate Groups:   3
+Potential Savings:  359.9 MB
+
+SIMILAR FILES
+-------------
+Similar Groups:     113
+
+RECOMMENDATIONS
+---------------
+1. Review duplicate groups - 3 groups found
+2. Potential space savings: 359.9 MB
+3. Check similar files for consolidation opportunities
+
+================================================================================
