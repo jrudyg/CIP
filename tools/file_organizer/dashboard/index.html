@@ -412,6 +412,30 @@
                 </div>
 
                 <div id="duplicates-content" style="display: none;">
+                    <!-- Execution Panel -->
+                    <div class="alert alert-warning" id="executionPanel" style="display: none; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 15px;">⚡ Execute Operations</h3>
+                        <div style="margin-bottom: 15px;">
+                            <strong id="approvedCount">0</strong> groups approved for deletion
+                            <span id="approvedSize" style="margin-left: 15px; color: #666;"></span>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="executeOperations(true)">
+                                🔍 Dry Run (Preview Only)
+                            </button>
+                            <button class="btn btn-danger" onclick="executeOperations(false)">
+                                ⚠️ Execute (Archive Files)
+                            </button>
+                            <button class="btn btn-secondary" onclick="validateExecution()">
+                                ✓ Validate Operations
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                            <strong>Dry Run:</strong> Validates and previews operations without making changes<br>
+                            <strong>Execute:</strong> Archives approved duplicate files (recoverable for 30 days)
+                        </div>
+                    </div>
+
                     <div class="bulk-actions" id="bulkActions">
                         <div>
                             <strong id="selectedCount">0</strong> groups selected
@@ -536,8 +560,10 @@
                 if (data.status === 'success' && data.groups.length > 0) {
                     duplicateGroups = data.groups;
                     renderDuplicates(data.groups);
+                    updateExecutionPanel();
                 } else {
                     document.getElementById('noDuplicates').style.display = 'block';
+                    updateExecutionPanel();
                 }
             } catch (error) {
                 console.error('Error loading duplicates:', error);
@@ -693,35 +719,231 @@
             alert('Ignore functionality coming soon!');
         }
 
+        async function validateExecution() {
+            try {
+                const response = await fetch(`${API_BASE}/validate-execution`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ group_ids: null })  // null = all approved
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.validation) {
+                    const v = data.validation;
+                    let message = `Validation Results:\n\n`;
+                    message += `Valid: ${v.valid ? '✓ Yes' : '✗ No'}\n`;
+                    message += `Files to process: ${v.file_count}\n`;
+                    message += `Total size: ${v.total_size_mb} MB\n\n`;
+
+                    if (v.errors.length > 0) {
+                        message += `Errors:\n${v.errors.map(e => '  • ' + e).join('\n')}\n\n`;
+                    }
+
+                    if (v.warnings.length > 0) {
+                        message += `Warnings:\n${v.warnings.map(w => '  • ' + w).join('\n')}\n`;
+                    }
+
+                    if (v.valid && v.errors.length === 0 && v.warnings.length === 0) {
+                        message += `✓ All checks passed! Safe to execute.`;
+                    }
+
+                    alert(message);
+                } else {
+                    alert('Validation failed: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error validating: ' + error.message);
+            }
+        }
+
+        async function executeOperations(dryRun = true) {
+            const actionText = dryRun ? 'DRY RUN' : 'EXECUTE';
+            const confirmText = dryRun ?
+                'Run dry-run simulation? This will validate operations without making any changes.' :
+                '⚠️ WARNING ⚠️\n\nThis will ARCHIVE approved duplicate files.\n\nFiles will be moved to the archive (recoverable for 30 days).\n\nContinue?';
+
+            if (!confirm(confirmText)) {
+                return;
+            }
+
+            try {
+                // Show progress indicator
+                const originalText = event.target.textContent;
+                event.target.disabled = true;
+                event.target.textContent = dryRun ? '🔄 Running dry-run...' : '🔄 Executing...';
+
+                const response = await fetch(`${API_BASE}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dry_run: dryRun,
+                        group_ids: null  // null = all approved
+                    })
+                });
+
+                const data = await response.json();
+                event.target.disabled = false;
+                event.target.textContent = originalText;
+
+                if (data.status === 'success' && data.result) {
+                    const r = data.result;
+                    let message = `${dryRun ? 'DRY RUN' : 'EXECUTION'} COMPLETE\n\n`;
+                    message += `✓ Completed: ${r.operations_completed}\n`;
+                    if (r.operations_failed > 0) {
+                        message += `✗ Failed: ${r.operations_failed}\n`;
+                    }
+                    message += `📦 Processed: ${r.total_size_mb} MB\n`;
+
+                    if (!dryRun && r.operations_completed > 0) {
+                        message += `\n📁 Archive Session: ${r.session_id}\n`;
+                        message += `\n✓ Files can be restored from Archives tab for 30 days.`;
+                    }
+
+                    if (r.warnings.length > 0) {
+                        message += `\n\nWarnings:\n${r.warnings.map(w => '  • ' + w).join('\n')}`;
+                    }
+
+                    if (r.errors.length > 0) {
+                        message += `\n\nErrors:\n${r.errors.map(e => '  • ' + e).join('\n')}`;
+                    }
+
+                    alert(message);
+
+                    // Reload data
+                    loadDuplicates();
+                    loadSummary();
+
+                    if (!dryRun) {
+                        // Switch to archives tab to show the new session
+                        setTimeout(() => {
+                            if (confirm('View archived files in Archives tab?')) {
+                                switchTab('archives');
+                            }
+                        }, 500);
+                    }
+                } else {
+                    alert('Operation failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                event.target.disabled = false;
+                event.target.textContent = originalText;
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function restoreArchive(sessionId) {
+            if (!confirm(`Restore all files from archive session "${sessionId}"?\n\nThis will move archived files back to their original locations.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/archives/${sessionId}/restore`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.result) {
+                    const r = data.result;
+                    let message = `RESTORE COMPLETE\n\n`;
+                    message += `✓ Restored: ${r.restored} files\n`;
+                    if (r.failed > 0) {
+                        message += `✗ Failed: ${r.failed} files\n`;
+                    }
+
+                    if (r.errors && r.errors.length > 0) {
+                        message += `\nErrors:\n${r.errors.slice(0, 5).map(e => '  • ' + e).join('\n')}`;
+                        if (r.errors.length > 5) {
+                            message += `\n  ... and ${r.errors.length - 5} more errors`;
+                        }
+                    }
+
+                    alert(message);
+
+                    // Reload archives
+                    loadArchives();
+                } else {
+                    alert('Restore failed: ' + (data.message || data.result?.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error restoring: ' + error.message);
+            }
+        }
+
+        function updateExecutionPanel() {
+            // Count approved groups
+            const approvedCount = duplicateGroups.filter(g => g.status === 'approved').length;
+            const approvedSize = duplicateGroups
+                .filter(g => g.status === 'approved')
+                .reduce((sum, g) => sum + (g.total_size * (g.file_count - 1)), 0);
+
+            const panel = document.getElementById('executionPanel');
+            const countElem = document.getElementById('approvedCount');
+            const sizeElem = document.getElementById('approvedSize');
+
+            if (approvedCount > 0) {
+                panel.style.display = 'block';
+                countElem.textContent = approvedCount;
+                sizeElem.textContent = `(${(approvedSize / (1024 * 1024)).toFixed(1)} MB to archive)`;
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
         async function loadArchives() {
+            document.getElementById('archives-loading').style.display = 'block';
+
             try {
                 const response = await fetch(`${API_BASE}/archives`);
                 const data = await response.json();
 
                 const container = document.getElementById('archivesContainer');
+                document.getElementById('archives-loading').style.display = 'none';
 
                 if (data.status === 'success' && data.sessions.length > 0) {
-                    container.innerHTML = data.sessions.map(session => `
+                    container.innerHTML = data.sessions.map(session => {
+                        const statusBadge = session.status === 'active' ?
+                            '<span style="color: #28a745;">● Active</span>' :
+                            session.status === 'completed' ?
+                            '<span style="color: #007bff;">✓ Completed</span>' :
+                            '<span style="color: #6c757d;">✗ Deleted</span>';
+
+                        const restoreButton = session.status === 'completed' ?
+                            `<button class="btn btn-primary" onclick="restoreArchive('${escapeHtml(session.session_id)}')">↺ Restore Files</button>` :
+                            '';
+
+                        return `
                         <div class="duplicate-group">
                             <div class="group-header">
                                 <div class="group-info">
                                     <div class="group-title">${escapeHtml(session.session_id)}</div>
                                     <div class="group-stats">
-                                        ${session.file_count} files • ${(session.total_size / (1024**2)).toFixed(1)} MB • ${escapeHtml(session.status)}
+                                        ${session.file_count} files • ${(session.total_size / (1024**2)).toFixed(1)} MB • ${statusBadge}
                                     </div>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    ${restoreButton}
                                 </div>
                             </div>
                             <div class="file-path" style="margin: 10px 0; color: #666;">
-                                ${escapeHtml(session.archive_path)}
+                                📁 ${escapeHtml(session.archive_path)}
                             </div>
-                            <div class="group-stats">Created: ${escapeHtml(session.created_at)}</div>
+                            <div class="group-stats">
+                                Created: ${escapeHtml(session.created_at)}
+                                ${session.notes ? '<br>Notes: ' + escapeHtml(session.notes) : ''}
+                            </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
-                    container.innerHTML = '<div class="empty-state"><p>No archive sessions found</p></div>';
+                    container.innerHTML = '<div class="empty-state"><h3>No Archive Sessions</h3><p>Archive sessions will appear here after executing file operations.</p></div>';
                 }
             } catch (error) {
                 console.error('Error loading archives:', error);
+                document.getElementById('archives-loading').style.display = 'none';
+                document.getElementById('archivesContainer').innerHTML =
+                    '<div class="alert alert-danger">Error loading archives: ' + error.message + '</div>';
             }
         }
 

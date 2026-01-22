@@ -21,6 +21,10 @@ from database import (
 )
 from logger import setup_logger
 from file_ops import validate_path_safety
+from executor import (
+    ExecutionEngine, get_archive_sessions as get_archive_sessions_exec,
+    restore_from_session
+)
 
 # Initialize
 app = Flask(__name__, static_folder='dashboard', static_url_path='')
@@ -434,6 +438,7 @@ def scan_status():
         return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
 
 @app.route('/api/execute', methods=['POST'])
+@limiter.limit("10 per minute")  # Strict limit for execution operations
 def execute_operations():
     """
     Execute approved operations (archive/delete)
@@ -449,21 +454,145 @@ def execute_operations():
     """
     try:
         data = request.get_json() or {}
-        dry_run = data.get('dry_run', True)
+        dry_run = data.get('dry_run', True)  # Default to dry-run for safety
         group_ids = data.get('group_ids')
 
-        # TODO: Implement execution engine
-        logger.warning("Execute operations not yet implemented")
+        logger.info(f"Execute request: dry_run={dry_run}, group_ids={group_ids}")
 
-        return jsonify({
-            'status': 'error',
-            'message': 'Execution not yet implemented - coming soon!',
-            'dry_run': dry_run
-        }), 501  # Not Implemented
+        # Create execution engine
+        engine = ExecutionEngine(dry_run=dry_run)
+
+        # Execute operations
+        result = engine.execute(group_ids=group_ids)
+
+        if result.success:
+            return jsonify({
+                'status': 'success',
+                'result': result.to_dict()
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Execution completed with errors',
+                'result': result.to_dict()
+            }), 400
 
     except Exception as e:
         logger.error(f"Error executing operations: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/validate-execution', methods=['POST'])
+def validate_execution():
+    """
+    Validate operations before execution (dry-run validation only)
+
+    Body:
+        {
+            "group_ids": [1, 2, 3, ...]  // optional, defaults to all approved
+        }
+
+    Returns:
+        JSON with validation results
+    """
+    try:
+        data = request.get_json() or {}
+        group_ids = data.get('group_ids')
+
+        logger.info(f"Validation request: group_ids={group_ids}")
+
+        # Create execution engine (dry-run mode)
+        engine = ExecutionEngine(dry_run=True)
+
+        # Validate operations
+        validation = engine.validate_operation(group_ids=group_ids)
+
+        return jsonify({
+            'status': 'success',
+            'validation': {
+                'valid': validation.valid,
+                'file_count': validation.file_count,
+                'total_size': validation.total_size,
+                'total_size_mb': round(validation.total_size / (1024 * 1024), 2),
+                'errors': validation.errors,
+                'warnings': validation.warnings
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error validating execution: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/archives', methods=['GET'])
+def list_archives():
+    """
+    Get list of archive sessions
+
+    Query params:
+        limit: Maximum number of sessions (default 50, max 200)
+
+    Returns:
+        JSON with archive sessions
+    """
+    try:
+        # Get limit from query params
+        limit = min(int(request.args.get('limit', 50)), 200)
+
+        # Get archive sessions
+        sessions = get_archive_sessions_exec(limit=limit)
+
+        return jsonify({
+            'status': 'success',
+            'count': len(sessions),
+            'sessions': sessions
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting archives: {e}")
         return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
+
+
+@app.route('/api/archives/<session_id>/restore', methods=['POST'])
+@limiter.limit("5 per minute")  # Strict limit for restore operations
+def restore_archive(session_id):
+    """
+    Restore all files from an archive session
+
+    Path params:
+        session_id: Archive session ID
+
+    Returns:
+        JSON with restore results
+    """
+    try:
+        logger.info(f"Restore request for session: {session_id}")
+
+        # Validate session_id format
+        if not session_id.startswith('archive_'):
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid session ID format'
+            }), 400
+
+        # Restore from session
+        result = restore_from_session(session_id)
+
+        if result['success']:
+            return jsonify({
+                'status': 'success',
+                'result': result
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': result.get('error', 'Restore failed'),
+                'result': result
+            }), 400
+
+    except Exception as e:
+        logger.error(f"Error restoring archive: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 def run_dashboard(host: str = DASHBOARD_HOST, port: int = DASHBOARD_PORT, debug: bool = DEBUG_MODE):
     """
