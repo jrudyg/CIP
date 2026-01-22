@@ -79,13 +79,19 @@ echo.
 echo [OK] Database import complete
 echo.
 
-REM Generate summary report
+REM Generate HTML report
 echo ================================================================================
-echo Generating summary report...
+echo Generating HTML report...
 echo ================================================================================
 echo.
 
-python -c "import json; from pathlib import Path; from datetime import datetime; import sqlite3; json_path = max(Path('outputs/recurring/exports').glob('metadata_export_*.json'), key=lambda p: p.stat().st_mtime); data = json.load(open(json_path)); conn = sqlite3.connect('C:/Users/jrudy/CIP/data/contracts.db'); cursor = conn.cursor(); cursor.execute('SELECT COUNT(*) FROM contract_metadata'); total = cursor.fetchone()[0]; cursor.execute('SELECT execution_status, COUNT(*) FROM contract_metadata GROUP BY execution_status'); statuses = cursor.fetchall(); print('\n' + '='*80); print('EXTRACTION SUMMARY'); print('='*80); print(f'Date: {datetime.now().strftime(\"%%Y-%%m-%%d %%H:%%M:%%S\")}'); print(f'Total contracts in database: {total}'); print(f'\nExecution Status:'); [print(f'  {s[0]:25s}: {s[1]:3d}') for s in statuses]; print('\nFiles:'); print(f'  Extraction results: {json_path.name}'); print(f'  Session state: session_state.json'); print(f'  Logs: logs/'); print('='*80); conn.close()"
+python generate_html_report.py
+
+if errorlevel 1 (
+    echo WARNING: HTML report generation failed
+) else (
+    echo [OK] HTML report created
+)
 
 echo.
 echo ================================================================================
