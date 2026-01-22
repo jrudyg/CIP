@@ -1,0 +1,25 @@
+{
+  "scan_id": 4,
+  "scan_date": "2026-01-21T15:24:22.535794",
+  "index_path": "G:\\My Drive\\file_dir\\directory_index.json",
+  "total_files": 68224,
+  "total_size": 7404180799,
+  "total_size_gb": 6.9,
+  "categorized_files": 47028,
+  "uncategorized_files": 21196,
+  "category_breakdown": {
+    "Reference Data": 1555,
+    "Documents": 1748,
+    "Media Files": 150,
+    "Compressed Archives": 122,
+    "Source Code": 28765,
+    "Temporary/Cache Files": 14274,
+    "Compiled/Derived Files": 327,
+    "Old Backups": 87
+  },
+  "duplicate_groups": 98,
+  "potential_savings_bytes": 3204758960,
+  "potential_savings_mb": 3056.3,
+  "similar_groups": 8944,
+  "scan_duration_seconds": 10974.25
+}

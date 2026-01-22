@@ -1,0 +1,36 @@
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: INFO
+
+  # Output format: json (structured) or text (human-readable)
+  format: json
+
+  # Output destinations
+  output:
+    console:
+      enabled: true
+      level: INFO
+    file:
+      enabled: true
+      level: DEBUG
+      path: logs/pdf_extractor_{timestamp}.log
+      rotation:
+        max_size_mb: 10
+        backup_count: 5
+
+  # Structured logging fields (JSON mode)
+  include_fields:
+    - timestamp
+    - level
+    - logger_name
+    - message
+    - filename
+    - function_name
+    - line_number
+    - process_id
+    - thread_id
+
+  # Performance logging
+  performance:
+    log_slow_operations: true
+    slow_threshold_seconds: 5.0

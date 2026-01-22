@@ -1,0 +1,27 @@
+# Core PDF libraries
+pypdf>=4.0.0
+pikepdf>=9.0.0
+pyhanko>=0.21.0
+
+# Certificate & crypto
+cryptography>=42.0.0
+asn1crypto>=1.5.1
+
+# Reporting
+openpyxl>=3.1.0
+
+# Optional: Vision API
+openai>=1.10.0
+pdf2image>=1.17.0
+pillow>=10.0.0
+
+# Optional: OCR
+pytesseract>=0.3.10
+
+# Utilities
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=4.1.0

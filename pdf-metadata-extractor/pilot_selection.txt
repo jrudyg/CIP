@@ -1,0 +1,31 @@
+# Phase 1 Pilot - 20 Representative Contracts
+
+# Category 1: Files with "signed" keyword (5 files)
+./6sense/DCS 6sense NDA (Final Approved) signed 10.31.2024.pdf
+./A. Land Electric/Mutual NDA-A. Land Electric - signed.pdf
+./Bunting Magnetics/Bunting DCS Vendor Mutual NDA 01.06.26 - signed.pdf
+./Cisco-Eagle/Mutual NDA Cisco-Eagle  DCS FINAL 01.22.2025 - signed.pdf
+./Dematic/Designed Conveyor Systems LLC_2026 Dematic Integrator Agreement 11.21.25 Signed_Fully Executed.pdf
+
+# Category 2: Unsigned/draft variants (5 files)
+./Addverb/Addverb - DCS Mutual NDA (Final) 04.16.2025 - unsigned.pdf
+./A-Line Striping/Mutual NDA A-Line Striping.pdf
+./ACE/Mutual NDA ACE.pdf
+./Compass/Compass NDA.pdf
+./Confires/Confires Mutual NDA.pdf
+
+# Category 3: Large files >2MB (5 files)
+./Dematic/Designed Conveyor Systems LLC_2023 Dematic Integrator Agreement_Fully Executed.pdf
+./Colorscapes/Colorscape- Signed NDA.pdf
+./CoBuilt/CoBuilt- NDA(Signed).pdf
+./Harsco/Harsco- DCS Mutual NDA 11.19.24- Executed.pdf
+./Nerak/Nerak Systems DCS NDA signed 6-16-23.pdf
+
+# Category 4: SOWs/Commercial Agreements (3 files)
+./A-LIGN/Designed Conveyor Systems-2025-2027-Type 2 SOC 2-SOW-Executed.pdf
+./Applied Technology Group (ATG)/Designed Conveyor Systems Master Service Agreement.pdf
+./Centerline/DCS-Centerline Master Subcontractor Agreement - FINAL 11.14.24 - signed.pdf
+
+# Category 5: Edge cases (2 files)
+./Army & Air Force Exchange Service/AAFES and DCS NDA.pdf
+./Bridgestone/NDA - BRIDGESTONE 2017.pdf
