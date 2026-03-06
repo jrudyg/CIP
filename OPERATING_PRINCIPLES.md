@@ -1,9 +1,9 @@
 # OPERATING PRINCIPLES
 ## Distilled from 38 Development Sessions (CIP + MI)
-**Version:** 1.2
+**Version:** 1.3
 **Created:** December 27, 2025
-**Updated:** January 17, 2026
-**Source:** VALUE-scored analysis of lessons learned (Benefits / Risk × Collaboration)
+**Updated:** March 6, 2026
+**Source:** VALUE-scored analysis of lessons learned (Benefits / Risk × Complexity)
 
 ---
 
@@ -101,10 +101,8 @@ WRONG: CAI writes detailed instructions → CC executes → Rework
 RIGHT: Share context → Ask for analysis → Confirm understanding → Execute
 ```
 
-**BOOTSTRAP Protocol:**
-```
-LISTEN → UNDERSTAND → CONSIDER → QUESTION → RECONSIDER → DECIDE → SUGGEST → FEEDBACK → FINALIZE
-```
+**[RESPONSE DISCIPLINE]** (replaces BOOTSTRAP):
+Before any response or solution: (1) restate what is being asked, (2) identify expected output type, (3) identify ambiguity or missing context. If clear → proceed. If not → ask.
 
 **APPROVAL GATE CHECK:**
 - Pre-approved tasks → EXECUTE, DO NOT ASK
@@ -134,7 +132,7 @@ Thresholds by duration:
 - 2+ hours blocked → 10% threshold → Pivot
 ```
 
-**VALUE Formula:** Benefits / (Risk × Collaboration)
+**VALUE Formula:** Benefits / (Risk × Complexity)
 
 **Source:** MI-14, CIP 008
 
@@ -200,7 +198,7 @@ RIGHT: Document lesson → Create enforcement trigger → Block mistake mechanic
 
 **Test:** Can you explain why each action was taken?
 
-**Source:** CIP 007 - user invoked TRUST protocol demanding systematic diagnostics
+**Source:** CIP 007 - user invoked AIA (formerly TRUST) protocol demanding systematic diagnostics
 
 ---
 
@@ -221,11 +219,13 @@ RIGHT: Document lesson → Create enforcement trigger → Block mistake mechanic
 
 ## PROTOCOL QUICK REFERENCE
 
-### BOOTSTRAP (Before Any Action)
+### RESPONSE DISCIPLINE (Before Any Action)
 ```
 DO NOT REACT.
-LISTEN → UNDERSTAND → CONSIDER → QUESTION → RECONSIDER → DECIDE → SUGGEST → FEEDBACK → FINALIZE
-Exhaust resources before declaring low confidence.
+(1) Restate what is being asked
+(2) Identify expected output type
+(3) Identify ambiguity or missing context
+If clear → proceed. If not → ask.
 CONFRONT at >97.5% confidence.
 ```
 
@@ -234,7 +234,7 @@ CONFRONT at >97.5% confidence.
 Critical = Stop.
 Weighted threshold (30m→30%, 1h→20%, 2h+→10%).
 Exceed threshold → Batch approve → Parallel work.
-VALUE = Benefits / (Risk × Collaboration)
+VALUE = Benefits / (Risk × Complexity)
 ```
 
 ### APPROVAL GATE (During Execution)
@@ -245,12 +245,13 @@ NEVER stop waiting silently.
 Check list before any "Should I..." question.
 ```
 
-### TRUST (Bidirectional Accountability)
+### AIA (Alert → Inform → Ask)
 ```
 Alert when confidence drops below threshold.
 93% for security decisions.
 91% for active advocacy.
-Both parties: Alert → Inform → Guide
+State the problem, provide context, ask a specific question.
+Do not proceed silently.
 ```
 
 ---
@@ -259,7 +260,7 @@ Both parties: Alert → Inform → Guide
 
 | Anti-Pattern | Symptom | Correction | Source |
 |--------------|---------|------------|--------|
-| **REACT Mode** | Jumping to solution without investigation | BOOTSTRAP first | CIP 022 |
+| **REACT Mode** | Jumping to solution without investigation | RESPONSE DISCIPLINE first | CIP 022 |
 | **False Completion** | CC claims done, files broken | Require evidence | CIP 015 |
 | **Permission Loop** | CC asks approval for pre-approved work | APPROVAL GATE CHECK | CIP 008 |
 | **Over-Specification** | CAI writes implementation details for CC | Share context, ask for analysis | CIP 009 |
@@ -290,15 +291,10 @@ Both parties: Alert → Inform → Guide
 
 ### Context Window Protocol
 ```
-At 80% capacity → Create checkpoint
-At 70% capacity → Alert user, offer options
+At 75% capacity → Emit [CHK], produce [HANDOFF] if Rudy confirms
+At 85% capacity → Produce [HANDOFF] without waiting for confirmation
 
-CHECKPOINT contains:
-- Current position
-- Decisions made (with rationale)
-- Files modified
-- Git status
-- Next session recommendations
+[HANDOFF] contents: See GLOSSARY.md → [HANDOFF]
 ```
 
 ### WAIT Protocol (Multi-Agent)
@@ -328,8 +324,7 @@ Use explicit markers to eliminate ambiguity:
 | **APPROVED** | Proceed with implementation |
 | **DEFER** | Not now, revisit later |
 | **REJECTED** | Do not proceed |
-| **EXPLORING** | Investigating, no commitment |
-| **VERIFIED** | Evidence confirmed |
+| **VERIFIED** | Grounded in verifiable evidence — exists, matches spec, can be shown |
 | **BLOCKED** | Cannot proceed, trigger PIVOT |
 
 ---
@@ -355,6 +350,7 @@ When conflicts arise, resolve in this order:
 | 1.0 | 2025-12-27 | Initial consolidation from 23 CIP sessions |
 | 1.1 | 2025-12-27 | Added frustration-driven rules (5-9), enforcement protocol, expanded anti-patterns |
 | 1.2 | 2026-01-17 | Added 5 January 2026 anti-patterns from MI-14 sessions (Infrastructure Theater, Parallel Work Without Coordination, Lost Documentation, Schema Assumption Creep, Optional Integration Ambiguity) |
+| 1.3 | 2026-03-06 | Term alignment with GLOSSARY.md v1.4: BOOTSTRAP → RESPONSE DISCIPLINE, TRUST → AIA, VALUE formula Collaboration → Complexity, removed [EXPLORING], context thresholds 80%/70% → 75%/85%, [VERIFIED] definition updated |
 
 ---
 
@@ -366,18 +362,27 @@ When conflicts arise, resolve in this order:
 | 1 | 5.00 | DOCUMENTATION ≠ ACTIVATION | CIP 015 |
 | 2 | 5.00 | 95% Confidence Gate | CIP 013 |
 | 3 | 4.90 | Infrastructure > Intelligence | MI-14 |
-| 4 | 4.85 | BOOTSTRAP Protocol | CIP 008 |
+| 4 | 4.85 | RESPONSE DISCIPLINE | CIP 008 |
 | 5 | 4.80 | Collaborative > Directive (69% efficiency) | CIP 009 |
 | 6 | 4.80 | Don't REACT - exhaust resources first | CIP 022 |
 | 7 | 4.70 | Verify, Don't Trust Claims | CIP 015 |
 | 8 | 4.60 | COMPLETE OR DON'T START | CIP 022 |
-| 9 | 4.55 | TRUST Protocol thresholds | CIP 001 |
+| 9 | 4.55 | AIA Protocol thresholds | CIP 001 |
 | 10 | 4.55 | SPEC BOUNDARY | CIP 015 |
 | 11 | 4.40 | Evidence-Based Only | CIP 021 |
 | 12 | 4.35 | Scope Refinement | CIP 011 |
 | 13 | 4.30 | APPROVAL GATE CHECK | CIP 008 |
 | 14 | 4.25 | PIVOT PROTOCOL | CIP 008 |
 | 15 | 4.25 | SYSTEMATIC > RANDOM | CIP 007 |
+
+---
+
+## CROSS-REFERENCES
+
+| Document | Path | Purpose |
+|----------|------|----------|
+| GLOSSARY.md | `C:\Users\jrudy\CCE\00-config\GLOSSARY.md` | Canonical term definitions |
+| DOMAIN_KNOWLEDGE.md | `C:\Users\jrudy\CCE\DOMAIN_KNOWLEDGE.md` | Architecture decisions and technical patterns |
 
 ---
 
