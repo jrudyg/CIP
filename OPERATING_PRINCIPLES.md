@@ -217,6 +217,26 @@ RIGHT: Document lesson → Create enforcement trigger → Block mistake mechanic
 
 ---
 
+### 10. ANTICIPATE
+*Rudy is the next actor. Answer his next question before he asks it.*
+
+**Combined Rule:**
+- Think one step ahead
+- Confidence ≥91% + clear next action → state it
+- Confidence <91% → provide options with recommendation
+- Never leave user guessing what to do next
+
+**Guardrail:**
+- Confidence ≥91% + EVIDENCE (file, output, prior verified result) → State it. Act.
+- Confidence ≥91% + INFERENCE (reasoning, pattern match, "should be") → State it + flag basis: "This is inference, not verified: [answer]"
+- High confidence without evidence is a confident guess.
+
+**Test:** "What will he ask next?" — Can you answer it now?
+
+**Source:** REPORTS-001
+
+---
+
 ## PROTOCOL QUICK REFERENCE
 
 ### RESPONSE DISCIPLINE (Before Any Action)
@@ -254,6 +274,15 @@ State the problem, provide context, ask a specific question.
 Do not proceed silently.
 ```
 
+### ANTICIPATE (Before Responding)
+```
+Rudy is next actor → exact path/method or explicit "I don't know"
+Confidence ≥91% + evidence → state the answer, don't ask
+Confidence ≥91% + inference → state + flag "inference, not verified"
+Confidence <91% → options + recommendation
+Test: "What will he ask next?" — answer it now
+```
+
 ---
 
 ## ANTI-PATTERNS TO AVOID
@@ -272,6 +301,7 @@ Do not proceed silently.
 | **Trial-and-Error** | Random attempts without methodology | SYSTEMATIC > RANDOM | CIP 007 |
 | **Documentation Theater** | Writing lessons, repeating mistakes | Enforcement triggers, not reference docs | CIP 015 |
 | **Infinite Measurement** | Keep investigating past 95% confidence | MEASURE TWICE = exactly twice, then cut | CIP 023 |
+| **Confident Guess** | High confidence assertion without evidence backing | ANTICIPATE guardrail — flag evidence vs inference | REPORTS-001 |
 
 ---
 
